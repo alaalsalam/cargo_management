@@ -34,7 +34,7 @@ frappe.ui.form.on('Parcel', {
 			return;
 		}
 
-		frm.page.indicator.parent().append(cargo_management.transportation_indicator(frm.doc.transportation)); // Add Extra Indicator
+		// frm.page.indicator.parent().append(cargo_management.transportation_indicator(frm.doc.transportation)); // Add Extra Indicator
 
 		frm.events.show_explained_status(frm); // Show 'Explained Status' as Intro Message
 		frm.events.build_custom_actions(frm);  // Adding custom buttons
@@ -49,9 +49,9 @@ frappe.ui.form.on('Parcel', {
 			return;
 		}
 
-		frm.doc.carrier = cargo_management.find_carrier_by_tracking_number(frm.doc.tracking_number).carrier;
+		// frm.doc.carrier = cargo_management.find_carrier_by_tracking_number(frm.doc.tracking_number).carrier;
 
-		refresh_many(['tracking_number', 'carrier']);
+		refresh_many(['tracking_number', 'weight_type']);
 	},
 
 	shipping_amount(frm) {
@@ -66,19 +66,17 @@ frappe.ui.form.on('Parcel', {
 	},
 
 	build_custom_actions(frm) {
-		const carriers_settings = cargo_management.load_carrier_settings(frm.doc.carrier);
+		// const carriers_settings = cargo_management.load_carrier_settings(frm.doc.carrier);
 
-		if (carriers_settings.api) {
-			frm.add_custom_button(__('Get Updates from Carrier'), () => frm.events.get_data_from_api(frm));
-		}
+		// if (carriers_settings.api) {
 
-		if (frm.doc.assisted_purchase) { // If is Assisted Purchase will have related Sales Order and Sales Order Item
-			frm.add_custom_button(__('Sales Order'), () => frm.events.sales_order_dialog(frm), __('Get Items From'));
-		}
+		// if (frm.doc) { // If is Assisted Purchase will have related Sales Order and Sales Order Item
+		// 	frm.add_custom_button(__('Sales Order'), () => frm.events.sales_order_dialog(frm), __('Get Items From'));
+		// }
 
-		frm.add_custom_button(__('Previsualization'), () => frm.events.parcel_preview_dialog(frm));
+		frm.add_custom_button(__('Previwe'), () => frm.events.parcel_preview_dialog(frm));
 
-		carriers_settings.urls.forEach(url => frm.add_custom_button(url.title, () => window.open(url.url + frm.doc.tracking_number)));
+		// carriers_settings.urls.forEach(url => frm.add_custom_button(url.title, () => window.open(url.url + frm.doc.tracking_number)));
 	},
 
 	get_data_from_api(frm) {
@@ -104,19 +102,20 @@ frappe.ui.form.on('Parcel', {
 		});
 
 		preview_dialog.show()
+		// <h3 class="text-center">${frm.doc.carrier} - ${frm.doc.tracking_number} ${cargo_management.transportation_indicator(frm.doc.transportation)}</h3>
 
 		preview_dialog.fields_dict.preview.$wrapper.html(`
 		<div class="container">
-			<h3 class="text-center">${frm.doc.carrier} - ${frm.doc.tracking_number} ${cargo_management.transportation_indicator(frm.doc.transportation)}</h3>
+			<h3 class="text-center">${frm.doc.tracking_number} -${frm.doc.destination}</h3>
 
 			<div class="row">
 				<div class="col-6">
 					<div class="card">
-						<div class="card-header">Información General</div>
+						<div class="card-header">General Information</div>
 						<ul class="list-group list-group-flush">
-							<li class="list-group-item">Shipper: <strong>${frm.doc.shipper}</strong></li>
-							<li class="list-group-item"># de Orden: <strong>${frm.doc.order_number}</strong></li>
-							<li class="list-group-item">Fecha de Compra: <strong>${frm.doc.order_date}</strong></li>
+							<li class="list-group-item">Shipper Name: <strong>${frm.doc.shipper_name}</strong></li>
+							<li class="list-group-item">Receiver Name: <strong>${frm.doc.receiver_name}</strong></li>
+							<li class="list-group-item">Destination : <strong>${frm.doc.destination}</strong></li>
 						</ul>
 					</div>
 				</div>
@@ -131,20 +130,28 @@ frappe.ui.form.on('Parcel', {
 					</div>
 				</div>
 			</div>
-
+			<div class="flex-row justify-content-between align-items-start border rounded p-3 my-3">
+						<div class="card">
+						<div class="card-header">Note</div>
+						<ul class="list-group list-group-flush">
+							<li class="list-group-item">Additional Notes: <strong>${frm.doc.notes}</strong></li>
+						</ul>
+					</div>
+				</div>
+			</div>
 			<div class="d-flex flex-row justify-content-between align-items-start border rounded p-3 my-3">
 				<div>
-					<div class="mb-2"><span class="badge badge-primary">Fecha de Orden</span> <strong>${frm.doc.order_date}</strong></div>
+					<div class="mb-2"><span class="badge badge-primary">Order Date</span> <strong>${frm.doc.order_date}</strong></div>
 				</div>
 				<div class="d-flex flex-column">
-					<div class="mb-2"><span class="badge badge-secondary">Fecha Estimada de Llegada 1</span> <strong>${frm.doc.est_delivery_1}</strong></div>
-					<div><span class="badge badge-secondary">Fecha Estimada de Llegada 2</span> <strong>${frm.doc.est_delivery_2}</strong></div>
+					<div class="mb-2"><span class="badge badge-secondary">Estimated Delivery Date (Earliest) 1</span> <strong>${frm.doc.est_delivery_1}</strong></div>
+					<div><span class="badge badge-secondary">Estimated Delivery Date (Latest) 2</span> <strong>${frm.doc.est_delivery_2}</strong></div>
 				</div>
 				<div>
-					<div><span class="badge badge-success">Fecha Estimada de Despacho</span> <strong>${frm.doc.est_departure}</strong></div>
+					<div><span class="badge badge-success">Estimated Departure Date</span> <strong>${frm.doc.est_departure}</strong></div>
 				</div>
 				<div>
-					<div><span class="badge badge-success">Fecha Estimada de Entrega</span> <strong>${frm.doc.est_departure}</strong></div>
+					<div><span class="badge badge-success">Carrier estimated delivery date</span> <strong>${frm.doc.est_departure}</strong></div>
 				</div>
 			</div>
 
@@ -152,33 +159,33 @@ frappe.ui.form.on('Parcel', {
 	},
 
 	//https://github.com/frappe/frappe/pull/12471 and https://github.com/frappe/frappe/pull/14181/files
-	sales_order_dialog(frm) {
-		const so_dialog = new frappe.ui.form.MultiSelectDialog({
-			doctype: 'Sales Order',
-			target: frm,
-			setters: {
-				delivery_date: undefined,
-				status: undefined
-			},
-			add_filters_group: 1,
-			get_query: () => {
-				return {
-					filters: {  // TODO: Only uncompleted orders!
-						docstatus: 1,
-						customer: frm.doc.customer,
-					}
-				};
-			},
-			action: (selections) => {
-				if (selections.length === 0) {
-					frappe.msgprint(__("Please select {0}", [so_dialog.doctype]))
-					return;
-				}
-				// so_dialog.dialog.hide();
-				frm.events.so_items_dialog(frm, selections);
-			}
-		});
-	},
+	// sales_order_dialog(frm) {
+	// 	const so_dialog = new frappe.ui.form.MultiSelectDialog({
+	// 		doctype: 'Sales Order',
+	// 		target: frm,
+	// 		setters: {
+	// 			delivery_date: undefined,
+	// 			status: undefined
+	// 		},
+	// 		add_filters_group: 1,
+	// 		get_query: () => {
+	// 			return {
+	// 				filters: {  // TODO: Only uncompleted orders!
+	// 					docstatus: 1,
+	// 					customer: frm.doc.customer,
+	// 				}
+	// 			};
+	// 		},
+	// 		action: (selections) => {
+	// 			if (selections.length === 0) {
+	// 				frappe.msgprint(__("Please select {0}", [so_dialog.doctype]))
+	// 				return;
+	// 			}
+	// 			// so_dialog.dialog.hide();
+	// 			frm.events.so_items_dialog(frm, selections);
+	// 		}
+	// 	});
+	// },
 
 	so_items_dialog: async function (frm, sales_orders) {
 		// Getting all sales order items from Sales Order
@@ -226,15 +233,41 @@ frappe.ui.form.on('Parcel', {
 
 	calculate_total(frm) {
 		frm.set_value('total', frm.get_sum('content', 'amount') + frm.doc.shipping_amount);
+		frm.set_value('total_actual_weight', frm.get_sum('content', 'actual_weight'));
+		frm.set_value('total_volumetric_weight', frm.get_sum('content', 'volumetric_weight'));
+		frm.set_value('total_net_length', frm.get_sum('content', 'length'));
+		frm.set_value('total_net_width', frm.get_sum('content', 'width'));
+		frm.set_value('total_net_height', frm.get_sum('content', 'height'));
+		frm.set_value('total_qty', frm.get_sum('content', 'qty'));
+		if(frm.doc.total_volumetric_weight > frm.doc.total_actual_weight){
+			frm.set_value('weight_type', 'Volumetric Weight');
+		}
+		else{
+			frm.set_value('weight_type', 'Actual Weight');
+		}
 	},
 	calculate_content_amounts_and_total(frm, cdt, cdn) {
+		console.log("--------calculate_content_amounts_and_total------")
 		let row = locals[cdt][cdn]; // Getting Content Child Row being edited
 
 		row.amount = row.qty * row.rate;
+		row.volumetric_weight = (row.length * row.width * row.height) / 1000000;
 		refresh_field('amount', cdn, 'content');
 
 		frm.events.calculate_total(frm); // Calculate the parent 'total' field
+	},
+	parcel_price_rule(frm) {
+		if(frm.doc.parcel_price_rule) {
+			return frm.call({
+				doc: frm.doc,
+				method: "apply_parcel_price_rule",
+				callback: function(r) {
+					calculate_content_amounts_and_total();
+				}
+			}).fail(() => frm.set_value('parcel_price_rule', ''));
+		}
 	}
+	
 });
 
 frappe.ui.form.on('Parcel Content', {
@@ -247,6 +280,21 @@ frappe.ui.form.on('Parcel Content', {
 	},
 
 	rate(frm, cdt, cdn) {
+		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
+	},
+	actual_weight(frm, cdt, cdn) {
+		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
+	},
+	volumetric_weight(frm, cdt, cdn) {
+		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
+	},
+	length(frm, cdt, cdn) {
+		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
+	},
+	width(frm, cdt, cdn) {
+		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
+	},
+	height(frm, cdt, cdn) {
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
 	},
 });

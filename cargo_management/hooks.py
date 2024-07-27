@@ -28,9 +28,9 @@ app_include_js = "cargo_management.bundle.js"
 # page_js = {"page" : "public/js/file.js"}
 
 # Include js in doctype views: override/extend Standard Form Scripts.
-# doctype_js = {
-# 	"Quotation": "public/js/quotation.js"  # TODO: WORKING HERE
-# }
+doctype_js = {
+	"Quotation": "public/js/quotation.js"  # TODO: WORKING HERE
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}

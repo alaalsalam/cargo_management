@@ -5,15 +5,24 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "description",
-  "tracking_number",
-  "section_break_5",
-  "qty",
-  "rate",
-  "amount",
   "section_break_6",
   "item_code",
-  "import_rate"
+  "length",
+  "width",
+  "height",
+  "volumetric_weight",
+  "actual_weight",
+  "column_break_kdgc",
+  "description",
+  "qty",
+  "weight_type",
+  "shipping_rule",
+  "tracking_number",
+  "section_break_bkfx",
+  "rate",
+  "import_rate",
+  "column_break_pmkm",
+  "amount"
  ],
  "fields": [
   {
@@ -44,23 +53,19 @@
    "default": "0.00",
    "fieldname": "rate",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Rate",
-   "options": "USD",
-   "reqd": 1
+   "options": "USD"
   },
   {
-   "allow_in_quick_entry": 1,
    "columns": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Amount",
    "options": "USD",
    "read_only": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -68,14 +73,9 @@
    "options": "Item"
   },
   {
-   "fieldname": "section_break_5",
-   "fieldtype": "Column Break"
-  },
-  {
    "columns": 1,
    "fieldname": "import_rate",
    "fieldtype": "Float",
-   "in_list_view": 1,
    "label": "Import Rate",
    "non_negative": 1
   },
@@ -86,17 +86,107 @@
   {
    "allow_in_quick_entry": 1,
    "bold": 1,
-   "columns": 2,
+   "columns": 1,
    "description": "Consolidated Tracking Number",
    "fieldname": "tracking_number",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Tracking Number"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "bold": 1,
+   "columns": 1,
+   "default": "1.00",
+   "description": "cm",
+   "fieldname": "length",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Length\t",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "bold": 1,
+   "columns": 1,
+   "default": "1.00",
+   "description": "cm",
+   "fieldname": "width",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Width",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "bold": 1,
+   "columns": 1,
+   "default": "1.00",
+   "description": "cm",
+   "fieldname": "height",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Height",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_kdgc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "weight_type",
+   "fieldtype": "Select",
+   "label": "Weight type",
+   "options": "Actual Weight\nVolumetric Weight"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "bold": 1,
+   "columns": 1,
+   "default": "1.00",
+   "fieldname": "actual_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Actual Weight",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "bold": 1,
+   "columns": 1,
+   "default": "1.00",
+   "description": "(length * width * height /1000000",
+   "fieldname": "volumetric_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Volumetric Weight",
+   "non_negative": 1,
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "shipping_rule",
+   "fieldtype": "Link",
+   "label": "Shipping Rule",
+   "options": "Parcel Price Rule"
+  },
+  {
+   "fieldname": "section_break_bkfx",
+   "fieldtype": "Section Break",
+   "hidden": 1
+  },
+  {
+   "fieldname": "column_break_pmkm",
+   "fieldtype": "Column Break"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2023-08-24 10:07:25.245831",
+ "modified": "2024-07-24 23:50:29.313247",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel Content",

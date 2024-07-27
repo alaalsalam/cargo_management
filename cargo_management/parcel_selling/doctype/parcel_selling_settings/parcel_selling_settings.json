@@ -50,7 +50,7 @@
   {
    "fieldname": "sea_section",
    "fieldtype": "Section Break",
-   "label": "Transit Time & Dispatch Days - AIR"
+   "label": "Transit Time & Dispatch Days - SEA"
   },
   {
    "fieldname": "column_break_7",
@@ -70,7 +70,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-10-31 15:36:19.779259",
+ "modified": "2024-07-02 12:25:01.336655",
  "modified_by": "Administrator",
  "module": "Parcel Selling",
  "name": "Parcel Selling Settings",

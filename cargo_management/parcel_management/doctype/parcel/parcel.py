@@ -19,7 +19,6 @@ class Parcel(Document):
 		from cargo_management.parcel_management.doctype.parcel_content.parcel_content import ParcelContent
 		from frappe.types import DF
 
-		assisted_purchase: DF.Check
 		cargo_shipment: DF.Link | None
 		carrier: DF.Literal["Drop Off", "Pick Up", "Unknown", "Amazon", "USPS", "UPS", "DHL", "FedEx", "OnTrac", "Cainiao", "SF Express", "Yanwen", "YunExpress", "SunYou", "Pitney Bowes", "Veho"]
 		carrier_est_delivery: DF.Datetime | None
@@ -29,25 +28,46 @@ class Parcel(Document):
 		carrier_status: DF.Literal["Unknown", "Pre Transit", "In Transit", "Out For Delivery", "Available For Pickup", "Delivered", "Return To Sender", "Failure", "Cancelled", "Error"]
 		carrier_status_detail: DF.Data | None
 		content: DF.Table[ParcelContent]
-		customer: DF.Link | None
-		customer_name: DF.Data | None
+		currency: DF.Link | None
+		destination: DF.Data | None
 		easypost_id: DF.Data | None
 		est_delivery_1: DF.Date | None
 		est_delivery_2: DF.Date | None
 		est_departure: DF.Date | None
 		explained_status: DF.Data | None
 		has_taxes: DF.Check
+		mode_of_payment: DF.Link | None
+		naming_series: DF.Literal["UN"]
+		net_total: DF.Currency
 		notes: DF.SmallText | None
 		order_date: DF.Date | None
 		order_number: DF.Data | None
-		residential_address: DF.Check
-		shipper: DF.Autocomplete | None
+		parcel_price_rule: DF.Link | None
+		receiver_address: DF.Data | None
+		receiver_email: DF.Data | None
+		receiver_name: DF.Link | None
+		receiver_number: DF.Data | None
+		receivers_card_image: DF.Attach | None
+		shipper: DF.Link | None
+		shipper_address: DF.Data | None
+		shipper_card_image: DF.Attach | None
+		shipper_email: DF.Data | None
+		shipper_name: DF.Link | None
+		shipper_number: DF.Data | None
 		shipping_amount: DF.Currency
 		signed_by: DF.Data | None
 		status: DF.Literal["Awaiting Receipt", "Awaiting Confirmation", "In Extraordinary Confirmation", "Awaiting Departure", "In Transit", "In Customs", "Sorting", "To Bill", "Unpaid", "For Delivery or Pickup", "Finished", "Cancelled", "Never Arrived", "Returned to Sender"]
 		total: DF.Currency
-		tracking_number: DF.Data
+		total_actual_weight: DF.Float
+		total_net_height: DF.Float
+		total_net_length: DF.Float
+		total_net_width: DF.Float
+		total_qty: DF.Int
+		total_volumetric_weight: DF.Float
+		tracking_number: DF.Data | None
 		transportation: DF.Literal["Sea", "Air"]
+		warehouse_receipt: DF.Link | None
+		weight_type: DF.Literal["Actual Weight", "Volumetric Weight"]
 	# end: auto-generated types
 	"""  All these are Frappe Core Flags:
 		'ignore_links':       avoid: _validate_links()
@@ -59,28 +79,56 @@ class Parcel(Document):
 	# TODO: Add Override Decorator for python 3.12
 	# TODO: Replace frappe.get_doc for DoctypeClass import. for Typing Completion
 
+	# ----------------------- Ala Added
+	@frappe.whitelist()
+	def apply_parcel_price_rule(self):
+		if self.parcel_price_rule:
+			parcel_price_rule = frappe.get_doc("Parcel Price Rule", self.parcel_price_rule)
+			parcel_price_rule.apply(self)
+
+			# self.calculate_taxes_and_totals()
+   
+	def get_shipping_address(self):
+		"""Returns Address object from shipping address fields if present"""
+
+		# shipping address fields can be `shipping_address_name` or `shipping_address`
+		# try getting value from both
+
+		for fieldname in ("shipping_address_name", "shipping_address"):
+			shipping_field = self.meta.get_field(fieldname)
+			if shipping_field and shipping_field.fieldtype == "Link":
+				if self.get(fieldname):
+					return frappe.get_doc("Address", self.get(fieldname))
+
+		return {}
+   # --------------------------------------
 	#@override
 	def save(self, request_data_from_api=False, *args, **kwargs):
 		""" Override def to change validation behaviour. Useful when called from outside a form. """
-		if request_data_from_api:  # If True we fetch data from API, ignore ALL checks and save it.
-			self.flags.ignore_permissions = self.flags.ignore_validate = self.flags.ignore_mandatory = self.flags.ignore_links = True
-			self.request_data_from_api()
+		# if request_data_from_api:  # If True we fetch data from API, ignore ALL checks and save it.
+		# 	self.flags.ignore_permissions = self.flags.ignore_validate = self.flags.ignore_mandatory = self.flags.ignore_links = True
+		# 	# self.request_data_from_api()
 
 		return super(Parcel, self).save(*args, **kwargs)
 
 	def validate(self):
+		self.apply_parcel_price_rule()
 		""" Sanitize fields """
+		self.tracking_number = self.name
 		self.tracking_number = self.tracking_number.strip().upper()  # Only uppercase with no spaces
-
+		for tracking in self.content:
+			tracking.tracking_number = str(self.tracking_number) + "-" + str(tracking.idx)
+			
 	def before_save(self):
 		""" Before saved in DB and after validated. Add new data. This runs on Insert(Create) or Save(Update)"""
 		if self.is_new():
-			self.request_data_from_api()
+			pass
+			# self.request_data_from_api()
 			# TODO: WORK ON THIS CHANGE!
-		elif self.has_value_changed('carrier') or self.has_value_changed('tracking_number'):  # Exists and data has changed
-			self.easypost_id = None  # Value has changed. We reset the ID. FIXME: Move this when we have new APIs.
-			self.request_data_from_api()
-			frappe.msgprint("Carrier or Tracking Number has changed, we have requested new data.", indicator='yellow', alert=True)
+		elif self.has_value_changed('shipper') or self.has_value_changed('tracking_number'):  # Exists and data has changed
+			# self.easypost_id = None  # Value has changed. We reset the ID. FIXME: Move this when we have new APIs.
+			# self.request_data_from_api()
+			frappe.msgprint("Shipper or Tracking Number has changed, we have requested new data.", indicator='yellow', alert=True)
 
 	def change_status(self, new_status):
 		"""
@@ -205,55 +253,55 @@ class Parcel(Document):
 
 		return {'message': message, 'color': color}
 
-	def request_data_from_api(self):
-		""" This selects the corresponding API to request data. Using Polymorphism. """
-		carrier_api = frappe.get_file_json(frappe.get_app_path('Cargo Management', 'public', 'carriers.json'))['CARRIERS'].get(self.carrier, {}).get('api')
+	# def request_data_from_api(self):
+	# 	""" This selects the corresponding API to request data. Using Polymorphism. """
+	# 	carrier_api = frappe.get_file_json(frappe.get_app_path('Cargo Management', 'public', 'carriers.json'))['CARRIERS'].get(self.carrier, {}).get('api')
 
-		print('TRY: MATCHING THE CARRIER_API')
-		match carrier_api:
-			case 'EasyPost':
-				api_data = self._request_data_from_easypost_api()
-			case '17Track':
-				api_data = self._request_data_from_17track_api()
-			case _:
-				frappe.msgprint(_('Parcel is handled by a carrier we can\'t track.'), indicator='red', alert=True)
-				return
+	# 	print('TRY: MATCHING THE CARRIER_API')
+	# 	match carrier_api:
+	# 		case 'EasyPost':
+	# 			api_data = self._request_data_from_easypost_api()
+	# 		case '17Track':
+	# 			api_data = self._request_data_from_17track_api()
+	# 		case _:
+	# 			frappe.msgprint(_('Parcel is handled by a carrier we can\'t track.'), indicator='red', alert=True)
+	# 			return
 
-		if not api_data:  # HOTFIX: We should always return something?
-			return  # If we don't return, the try will fail, and api_data.get will raise a big error(None has not .get())
+	# 	if not api_data:  # HOTFIX: We should always return something?
+	# 		return  # If we don't return, the try will fail, and api_data.get will raise a big error(None has not .get())
 
-		try:
-			print('ELSE: UPDATING FROM API DATA')
-			self.update_from_api_data(api_data)  # Data from API that will be saved
-			frappe.msgprint(_('Parcel has been updated from {} API.').format(carrier_api), indicator='green', alert=True)
-		except Exception as e:
-			frappe.log_error(f"17Track API: {type(e).__name__} -> {e}", reference_doctype='Parcel', reference_name=api_data.get('data', {}).get('number', None))
+	# 	try:
+	# 		print('ELSE: UPDATING FROM API DATA')
+	# 		self.update_from_api_data(api_data)  # Data from API that will be saved
+	# 		frappe.msgprint(_('Parcel has been updated from {} API.').format(carrier_api), indicator='green', alert=True)
+	# 	except Exception as e:
+	# 		frappe.log_error(f"17Track API: {type(e).__name__} -> {e}", reference_doctype='Parcel', reference_name=api_data.get('data', {}).get('number', None))
 
-		print('OUTSIDE TRY: Saliendo del TRY')
+	# 	print('OUTSIDE TRY: Saliendo del TRY')
 
-	def _request_data_from_easypost_api(self) :
-		""" Handles POST or GET to the Easypost API. Also parses the data. """
-		try:
-			if self.easypost_id:  # Parcel exists on Database. Request updates from API.
-				return EasyPostAPI(self.carrier).retrieve_package_data(self.easypost_id)
-			else:  # Parcel don't exist on System or EasyPost. We create a new one and attach it.
-				return EasyPostAPI(self.carrier).register_package(self.tracking_number)
-		except EasyPostAPIError as e:
-			print('EXCEPT: Catching inside the requestor')
-			frappe.msgprint(msg=str(e.__dict__), title='EasyPost API Error', raise_exception=False, indicator='red')
+	# def _request_data_from_easypost_api(self) :
+	# 	""" Handles POST or GET to the Easypost API. Also parses the data. """
+	# 	try:
+	# 		if self.easypost_id:  # Parcel exists on Database. Request updates from API.
+	# 			return EasyPostAPI(self.carrier).retrieve_package_data(self.easypost_id)
+	# 		else:  # Parcel don't exist on System or EasyPost. We create a new one and attach it.
+	# 			return EasyPostAPI(self.carrier).register_package(self.tracking_number)
+	# 	except EasyPostAPIError as e:
+	# 		print('EXCEPT: Catching inside the requestor')
+	# 		frappe.msgprint(msg=str(e.__dict__), title='EasyPost API Error', raise_exception=False, indicator='red')
 
 	# FIXME: 6 - 10 - 81
-	def _request_data_from_17track_api(self):
-		try:
-			if self.easypost_id:
-				return API17Track(self.carrier).retrieve_package_data(self.tracking_number)
-			else:
-				api_data = API17Track(self.carrier).register_package(self.tracking_number)
-				self.easypost_id = api_data['tag']  # api_data.get('tag', frappe.generate_hash(length=10))
-				return api_data
-		except Exception as e:
-			frappe.msgprint(msg=str(e), title='17Track API Error', raise_exception=False, indicator='red')
-			return None  # HOTFIX for "if not api_data:"
+	# def _request_data_from_17track_api(self):
+	# 	try:
+	# 		if self.easypost_id:
+	# 			return API17Track(self.carrier).retrieve_package_data(self.tracking_number)
+	# 		else:
+	# 			api_data = API17Track(self.carrier).register_package(self.tracking_number)
+	# 			self.easypost_id = api_data['tag']  # api_data.get('tag', frappe.generate_hash(length=10))
+	# 			return api_data
+	# 	except Exception as e:
+	# 		frappe.msgprint(msg=str(e), title='17Track API Error', raise_exception=False, indicator='red')
+	# 		return None  # HOTFIX for "if not api_data:"
 
 	def update_from_api_data(self, api_data: dict) -> None:
 		""" This updates the parcel with the data from the API. """
@@ -309,3 +357,5 @@ class Parcel(Document):
 # FIXME: 2 warning, 20 w warning, 85 typos -> 276
 # 292 Refactor de constantes y estados
 # FIXME 311: 2 warning, 29 w warning, 21 typos -> 276 | Corregir State Machine y COLOR usage!
+
+ 

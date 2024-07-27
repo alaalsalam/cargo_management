@@ -32,15 +32,15 @@ class WarehouseReceipt(Document):
 
 		if not packages:
 			return
-
-		frappe.db.sql("""
-		UPDATE tabParcel
-		SET warehouse_receipt = %(wr_name)s
-		WHERE name IN %(packages)s AND COALESCE(warehouse_receipt, '') != %(wr_name)s
-		""", {
-			'wr_name': self.name,
-			'packages': packages
-		})
+		if self.name:
+			frappe.db.sql("""
+			UPDATE tabParcel
+			SET warehouse_receipt = %(wr_name)s
+			WHERE name IN %(packages)s AND COALESCE(warehouse_receipt, '') != %(wr_name)s
+			""", {
+				'wr_name': self.name,
+				'packages': packages
+			})
 
 	# TODO: Actually change the status after the package is validated and creadted. maybe at status change from draft to open?
 

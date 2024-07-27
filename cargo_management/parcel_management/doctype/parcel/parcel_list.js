@@ -13,14 +13,14 @@ frappe.listview_settings['Parcel'] = {
 		listview.page.sidebar.toggle(false);
 
 		// Override: onchange() method set in frappe/list/base_list.js -> make_standard_filters()
-		tracking_number_field.df.onchange = customer_name_field.df.onchange = function () {
-			// Remove '%' added in frappe/list/base_list.js -> get_standard_filters() when the listview loads and update both UI and internal values
-			this.value = this.input.value = this.get_input_value().replaceAll('%', '').trim().toUpperCase(); // this.set_input() is not working
+		// tracking_number_field.df.onchange = customer_name_field.df.onchange = function () {
+		// 	// Remove '%' added in frappe/list/base_list.js -> get_standard_filters() when the listview loads and update both UI and internal values
+		// 	this.value = this.input.value = this.get_input_value().replaceAll('%', '').trim().toUpperCase(); // this.set_input() is not working
 
-			if (this.value !== this.last_value) {
-				listview.filter_area.refresh_list_view(); // refresh_list_view() if the value has changed
-			}
-		};
+		// 	if (this.value !== this.last_value) {
+		// 		listview.filter_area.refresh_list_view(); // refresh_list_view() if the value has changed
+		// 	}
+		// };
 
 		/* Override to add 'or_filters'. FIXME: Will be better to have it on backend to solve: gets_args + get_count_str + get_stats
 		 * frappe hook: 'permission_query_conditions' Wont work, It get called after we have build the frappe
@@ -35,13 +35,13 @@ frappe.listview_settings['Parcel'] = {
 			if (tracking_number_filter >= 0) {  // We have 'tracking_name' filter being filtered. -> tracking_number_filter will contain index if found
 				args.filters.splice(tracking_number_filter, 1);  // Removing 'name' filter from 'filters'. It's a 'standard_filter'
 
-				const search_term = cargo_management.find_carrier_by_tracking_number(tracking_number_field.get_input_value()).search_term;
+				// const search_term = cargo_management.find_carrier_by_tracking_number(tracking_number_field.get_input_value()).search_term;
 
 				// TODO: WORK -> We will not use the main field from now on
-				args.or_filters = ['name', 'tracking_number'].map(field => [
-					args.doctype, field, 'like', '%' + search_term + '%'
-				]); // Mapping each field to 'or_filters' for the necessary fields to search
-				args.or_filters.push(['Parcel Content', 'tracking_number', 'like', '%' + search_term + '%'])  // This acts as a consolidated tracking number
+				// args.or_filters = ['name', 'tracking_number'].map(field => [
+				// 	args.doctype, field, 'like', '%' + search_term + '%'
+				// ]); // Mapping each field to 'or_filters' for the necessary fields to search
+				// args.or_filters.push(['Parcel Content', 'tracking_number', 'like', '%' + search_term + '%'])  // This acts as a consolidated tracking number
 			}
 
 			return args;
@@ -68,48 +68,105 @@ frappe.listview_settings['Parcel'] = {
 
 	button: {
 		show: () => true,
-		get_label: () => __('Search'),
+		get_label: () => __('Preview'),
 		get_description: () => '',
 		action(doc) {
-			let fields = [...this.build_carrier_urls(__('Tracking Number'), doc.tracking_number, doc.carrier)];
+			this.parcel_preview_dialog(doc)
+		// 	let fields = [...this.build_carrier_urls(__('Tracking Number'), doc.tracking_number, doc.carrier)];
 
-			if (doc.name !== doc.tracking_number) {
-				fields.unshift(...this.build_carrier_urls(__('Name'), doc.name));
-			}
+		// 	if (doc.name !== doc.tracking_number) {
+		// 		fields.unshift(...this.build_carrier_urls(__('Name'), doc.name));
+		// 	}
 
-			if (doc.consolidated_tracking_numbers) {
-				doc.consolidated_tracking_numbers.split('\n').forEach((tracking_number, i) => {
-					fields.push(...this.build_carrier_urls(__('Consolidated #{0}', [i + 1]), tracking_number));
-				});
-			}
+		// 	if (doc.consolidated_tracking_numbers) {
+		// 		doc.consolidated_tracking_numbers.split('\n').forEach((tracking_number, i) => {
+		// 			fields.push(...this.build_carrier_urls(__('Consolidated #{0}', [i + 1]), tracking_number));
+		// 		});
+		// 	}
 
-			new frappe.ui.Dialog({animate: false, size: 'small', indicator: 'green', title: this.get_label, fields: fields}).show();
+		// 	new frappe.ui.Dialog({animate: false, size: 'small', indicator: 'green', title: this.get_label, fields: fields}).show();
 		},
-		build_carrier_urls(section_label, lookup_field, carrier = null) {
-			carrier = carrier || cargo_management.find_carrier_by_tracking_number(lookup_field).carrier;
-
-			let fields = [{fieldtype: 'Section Break', label: `${section_label}(${carrier}): ${lookup_field}`}];
-			const urls = cargo_management.load_carrier_settings(carrier).urls;
-
-			urls.forEach((url, i) => {
-				fields.push({
-					fieldtype: 'Button', label: url.title, input_class: "btn-block btn-primary",  // FIXME: btn-default
-					click: () => window.open(url.url + lookup_field)
-				});
-
-				if (i < urls.length - 1) {
-					fields.push({fieldtype: 'Column Break'});
-				}
+		parcel_preview_dialog(frm) {
+			const preview_dialog = new frappe.ui.Dialog({
+				title: 'General Overview', size: 'extra-large',
+				fields: [
+					{fieldtype: 'HTML', fieldname: 'preview'},
+				]
 			});
+	
+			preview_dialog.show()
+			// <h3 class="text-center">${frm.doc.carrier} - ${frm.doc.tracking_number} ${cargo_management.transportation_indicator(frm.doc.transportation)}</h3>
+	
+			preview_dialog.fields_dict.preview.$wrapper.html(`
+			<div class="container">
+				<h3 class="text-center">${frm.doc.carrier} - ${frm.doc.tracking_number} - ###</h3>
+	
+				<div class="row">
+					<div class="col-6">
+						<div class="card">
+							<div class="card-header">Información General</div>
+							<ul class="list-group list-group-flush">
+								<li class="list-group-item">Shipper: <strong>${frm.doc.shipper}</strong></li>
+								<li class="list-group-item"># de Orden: <strong>${frm.doc.order_number}</strong></li>
+								<li class="list-group-item">Fecha de Compra: <strong>${frm.doc.order_date}</strong></li>
+							</ul>
+						</div>
+					</div>
+					<div class="col-6">
+						<div class="card">
+							<div class="card-header">Descripcion</div>
+							<ul class="list-group list-group-flush">
+								${frm.doc.content.map((c) => {
+									return (`<li class="list-group-item">Descripcion: <strong>${c.description}</strong> | Tracking: <strong>${c.tracking_number}</strong></li>`);
+								}).join('') }
+							</ul>
+						</div>
+					</div>
+				</div>
+	
+				<div class="d-flex flex-row justify-content-between align-items-start border rounded p-3 my-3">
+					<div>
+						<div class="mb-2"><span class="badge badge-primary">Fecha de Orden</span> <strong>${frm.doc.order_date}</strong></div>
+					</div>
+					<div class="d-flex flex-column">
+						<div class="mb-2"><span class="badge badge-secondary">Fecha Estimada de Llegada 1</span> <strong>${frm.doc.est_delivery_1}</strong></div>
+						<div><span class="badge badge-secondary">Fecha Estimada de Llegada 2</span> <strong>${frm.doc.est_delivery_2}</strong></div>
+					</div>
+					<div>
+						<div><span class="badge badge-success">Fecha Estimada de Despacho</span> <strong>${frm.doc.est_departure}</strong></div>
+					</div>
+					<div>
+						<div><span class="badge badge-success">Fecha Estimada de Entrega</span> <strong>${frm.doc.est_departure}</strong></div>
+					</div>
+				</div>
+	
+			</div>`);
+		},
+		// build_carrier_urls(section_label, lookup_field, carrier = null) {
+		// 	carrier = carrier || cargo_management.find_carrier_by_tracking_number(lookup_field).carrier;
 
-			return fields;
-		}
+		// 	let fields = [{fieldtype: 'Section Break', label: `${section_label}(${carrier}): ${lookup_field}`}];
+		// 	const urls = cargo_management.load_carrier_settings(carrier).urls;
+
+		// 	urls.forEach((url, i) => {
+		// 		fields.push({
+		// 			fieldtype: 'Button', label: url.title, input_class: "btn-block btn-primary",  // FIXME: btn-default
+		// 			click: () => window.open(url.url + lookup_field)
+		// 		});
+
+		// 		if (i < urls.length - 1) {
+		// 			fields.push({fieldtype: 'Column Break'});
+		// 		}
+		// 	});
+
+		// 	return fields;
+		// }
 	},
 
-	formatters: {
-		transportation: (value) => cargo_management.transportation_formatter(value),
-		name: (value, df, doc) => (value !== doc.tracking_number) ? `<b>${value}</b>` : ''
-	}
+	// formatters: {
+	// 	transportation: (value) => cargo_management.transportation_formatter(value),
+	// 	name: (value, df, doc) => (value !== doc.tracking_number) ? `<b>${value}</b>` : ''
+	// }
 };
 // 119 FIXME: Create more functions, and move them to cargo_management.js
 // 6 warning, 1 typo

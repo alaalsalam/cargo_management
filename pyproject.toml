@@ -18,4 +18,3 @@ build-backend = "flit_core.buildapi"
 
 [tool.bench.dev-dependencies]
 
-typing-modules = ["frappe.types.DF"]

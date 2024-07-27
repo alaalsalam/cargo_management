@@ -1,10 +1,11 @@
-# Copyright (c) 2022, Agile Shift and contributors
+# Copyright (c) 2024, Agile Shift and contributors
 # For license information, please see license.txt
 
 # import frappe
 from frappe.model.document import Document
 
-class ParcelSellingSettings(Document):
+
+class ParcelRuleCondition(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -13,11 +14,11 @@ class ParcelSellingSettings(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		air_departure_days: DF.Data | None
-		sea_departure_days: DF.Data | None
-		transit_days_air_1: DF.Int
-		transit_days_air_2: DF.Int
-		transit_days_sea_1: DF.Int
-		transit_days_sea_2: DF.Int
+		from_value: DF.Float
+		parent: DF.Data
+		parentfield: DF.Data
+		parenttype: DF.Data
+		shipping_amount: DF.Currency
+		to_value: DF.Float
 	# end: auto-generated types
 	pass

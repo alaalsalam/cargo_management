@@ -3,28 +3,65 @@
  "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "format:{tracking_number}",
+ "autoname": "naming_series:",
  "creation": "2020-06-12 19:06:49.803202",
  "default_view": "List",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "tracking_number",
-  "carrier",
-  "column_break_1",
-  "customer",
-  "customer_name",
-  "column_break_2",
+  "section_break_nhwc",
+  "shipper_information_column",
+  "shipper_name",
+  "shipper_number",
+  "shipper_address",
+  "shipper_email",
+  "shipper_card_image",
+  "receiver_information_column",
+  "receiver_name",
+  "receiver_number",
+  "receiver_address",
+  "receiver_email",
+  "receivers_card_image",
+  "totals_section",
+  "column_break_5tood",
   "transportation",
+  "shipper",
+  "destination",
+  "column_break_4",
+  "mode_of_payment",
+  "order_date",
+  "column_break_5",
+  "carrier",
+  "est_departure",
+  "est_delivery_1",
+  "est_delivery_2",
   "status",
-  "extra_services_section",
-  "column_break_mpgh",
-  "column_break_uyaz",
-  "assisted_purchase",
-  "column_break_xquh",
-  "residential_address",
-  "column_break_loiy",
+  "currency",
+  "content_section",
+  "content",
+  "section_break_dzqj",
+  "parcel_price_rule",
+  "weight_type",
+  "total_volumetric_weight",
+  "total_actual_weight",
+  "column_break_jzgx",
+  "total_net_length",
+  "total_net_width",
+  "total_net_height",
+  "column_break_dzuw",
+  "total_qty",
+  "shipping_amount",
+  "total",
+  "net_total",
+  "section_break_gtiv",
+  "notes",
+  "section_break_rxsz",
+  "tracking_number",
+  "order_number",
+  "naming_series",
+  "has_taxes",
+  "additional_data_tab",
   "additional_data_from_carrier_section",
   "carrier_est_delivery",
   "carrier_real_delivery",
@@ -35,25 +72,11 @@
   "carrier_status",
   "carrier_status_detail",
   "carrier_last_detail",
-  "content_section",
-  "content",
-  "totals_section",
-  "column_break_5tood",
-  "est_departure",
-  "est_delivery_1",
-  "est_delivery_2",
-  "column_break_4",
-  "shipper",
-  "order_number",
-  "order_date",
-  "notes",
-  "column_break_5",
-  "shipping_amount",
-  "has_taxes",
-  "total",
   "links_section",
   "cargo_shipment",
   "explained_status",
+  "column_break_heai",
+  "warehouse_receipt",
   "easypost_id"
  ],
  "fields": [
@@ -69,30 +92,7 @@
    "in_standard_filter": 1,
    "label": "Tracking Number",
    "no_copy": 1,
-   "reqd": 1,
    "unique": 1
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "customer",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Customer",
-   "options": "Customer",
-   "search_index": 1
-  },
-  {
-   "bold": 1,
-   "depends_on": "customer",
-   "fetch_from": "customer.customer_name",
-   "fieldname": "customer_name",
-   "fieldtype": "Data",
-   "in_global_search": 1,
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Customer Name",
-   "read_only": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -105,10 +105,6 @@
    "options": "Drop Off\nPick Up\nUnknown\nAmazon\nUSPS\nUPS\nDHL\nFedEx\nOnTrac\nCainiao\nSF Express\nYanwen\nYunExpress\nSunYou\nPitney Bowes\nVeho",
    "reqd": 1,
    "search_index": 1
-  },
-  {
-   "fieldname": "column_break_1",
-   "fieldtype": "Column Break"
   },
   {
    "bold": 1,
@@ -156,10 +152,6 @@
    "non_negative": 1,
    "precision": "2",
    "read_only": 1
-  },
-  {
-   "fieldname": "column_break_2",
-   "fieldtype": "Column Break"
   },
   {
    "bold": 1,
@@ -220,7 +212,8 @@
   {
    "fieldname": "content_section",
    "fieldtype": "Section Break",
-   "hide_border": 1
+   "hide_border": 1,
+   "label": "Contents"
   },
   {
    "allow_bulk_edit": 1,
@@ -234,7 +227,7 @@
    "description": "Total Order Value",
    "fieldname": "total",
    "fieldtype": "Currency",
-   "label": "Total(Amt)",
+   "label": "Total",
    "options": "USD",
    "read_only": 1
   },
@@ -257,19 +250,6 @@
    "options": "USD"
   },
   {
-   "allow_in_quick_entry": 1,
-   "bold": 1,
-   "default": "0",
-   "description": "Package was purchased using Shopping Assistance Service",
-   "fieldname": "assisted_purchase",
-   "fieldtype": "Check",
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Assisted Purchase",
-   "reqd": 1,
-   "search_index": 1
-  },
-  {
    "bold": 1,
    "fieldname": "cargo_shipment",
    "fieldtype": "Link",
@@ -283,15 +263,10 @@
    "search_index": 1
   },
   {
-   "allow_in_quick_entry": 1,
-   "bold": 1,
-   "fieldname": "extra_services_section",
-   "fieldtype": "Section Break",
-   "label": "Services"
-  },
-  {
+   "collapsible": 1,
    "fieldname": "totals_section",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Shipment Information"
   },
   {
    "allow_in_quick_entry": 1,
@@ -305,7 +280,6 @@
    "in_standard_filter": 1,
    "label": "Transportation",
    "options": "Sea\nAir",
-   "reqd": 1,
    "search_index": 1
   },
   {
@@ -352,21 +326,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "allow_in_quick_entry": 1,
-   "bold": 1,
-   "default": "0",
-   "description": "Package was sent to a Residential Address(Non Freight Forwarder)",
-   "fieldname": "residential_address",
-   "fieldtype": "Check",
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Residential Address"
-  },
-  {
-   "fieldname": "column_break_xquh",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "est_delivery_1",
    "fieldtype": "Date",
    "label": "Estimated Delivery Date (Earliest)"
@@ -377,18 +336,6 @@
    "label": "Estimated Delivery Date (Latest)"
   },
   {
-   "fieldname": "column_break_mpgh",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_uyaz",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_loiy",
-   "fieldtype": "Column Break"
-  },
-  {
    "description": "Date on which it will be shipped",
    "fieldname": "est_departure",
    "fieldtype": "Date",
@@ -396,9 +343,206 @@
   },
   {
    "allow_in_quick_entry": 1,
+   "default": "Today",
    "fieldname": "order_date",
    "fieldtype": "Date",
-   "label": "Purchase Date"
+   "label": "Order Date"
+  },
+  {
+   "fieldname": "column_break_heai",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "warehouse_receipt",
+   "fieldtype": "Link",
+   "label": "Warehouse Receipt",
+   "options": "Warehouse Receipt"
+  },
+  {
+   "fieldname": "shipper_information_column",
+   "fieldtype": "Column Break",
+   "label": "Shipper Information"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "shipper_name",
+   "fieldtype": "Link",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Shipper Name",
+   "options": "Customer"
+  },
+  {
+   "fetch_from": "shipper_name.custom_phone_number",
+   "fieldname": "shipper_number",
+   "fieldtype": "Data",
+   "label": "Shipper Number",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "shipper_name.custom_address",
+   "fieldname": "shipper_address",
+   "fieldtype": "Data",
+   "label": "Shipper Address",
+   "options": "Territory",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "shipper_name.custom_email_address",
+   "fieldname": "shipper_email",
+   "fieldtype": "Data",
+   "label": "Shipper Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "receiver_information_column",
+   "fieldtype": "Column Break",
+   "label": "Receiver Information"
+  },
+  {
+   "fieldname": "receiver_name",
+   "fieldtype": "Link",
+   "label": "Receiver Name",
+   "options": "Customer"
+  },
+  {
+   "fetch_from": "receiver_name.custom_phone_number",
+   "fieldname": "receiver_number",
+   "fieldtype": "Data",
+   "label": "Receiver Number",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "receiver_name.custom_address",
+   "fieldname": "receiver_address",
+   "fieldtype": "Data",
+   "label": "Receiver Address",
+   "options": "Territory",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "receiver_name.custom_email_address",
+   "fieldname": "receiver_email",
+   "fieldtype": "Data",
+   "label": "Receiver Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "label": "Mode of Payment",
+   "options": "Mode of Payment"
+  },
+  {
+   "fieldname": "section_break_gtiv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "additional_data_tab",
+   "fieldtype": "Tab Break",
+   "label": "Additional Data"
+  },
+  {
+   "fieldname": "section_break_nhwc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_dzqj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Int",
+   "label": "Total Quantity"
+  },
+  {
+   "fieldname": "column_break_jzgx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_dzuw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_net_length",
+   "fieldtype": "Float",
+   "label": "Total Net Length"
+  },
+  {
+   "fieldname": "total_net_width",
+   "fieldtype": "Float",
+   "label": "Total Net Width"
+  },
+  {
+   "fieldname": "total_net_height",
+   "fieldtype": "Float",
+   "label": "Total Net Height"
+  },
+  {
+   "fieldname": "total_volumetric_weight",
+   "fieldtype": "Float",
+   "label": "Total Volumetric Weight"
+  },
+  {
+   "fieldname": "weight_type",
+   "fieldtype": "Select",
+   "label": "Weight type",
+   "options": "Actual Weight\nVolumetric Weight"
+  },
+  {
+   "bold": 1,
+   "description": "Total Order Value",
+   "fieldname": "net_total",
+   "fieldtype": "Currency",
+   "label": "Net Total",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parcel_price_rule",
+   "fieldtype": "Link",
+   "label": "Parcel Price Rule",
+   "options": "Parcel Price Rule"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "receivers_card_image",
+   "fieldtype": "Attach",
+   "label": "Receiver Card Image"
+  },
+  {
+   "fieldname": "shipper_card_image",
+   "fieldtype": "Attach",
+   "label": "Shipper Card Image"
+  },
+  {
+   "fetch_from": "receiver_name.custom_address",
+   "fieldname": "destination",
+   "fieldtype": "Data",
+   "label": "Destination",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_actual_weight",
+   "fieldtype": "Float",
+   "label": "Total Actual Weight"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "UN"
+  },
+  {
+   "fieldname": "section_break_rxsz",
+   "fieldtype": "Section Break"
   }
  ],
  "links": [
@@ -428,11 +572,11 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-04-27 06:05:32.669711",
+ "modified": "2024-07-25 01:47:09.752981",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",
- "naming_rule": "Expression",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -487,8 +631,7 @@
    "share": 1
   }
  ],
- "quick_entry": 1,
- "search_fields": "tracking_number,customer_name",
+ "search_fields": "tracking_number,shipper_name",
  "show_name_in_global_search": 1,
  "show_preview_popup": 1,
  "sort_field": "modified",
