@@ -1,6 +1,7 @@
 frappe.ui.form.on('Warehouse Receipt', {
 
 	transportation_multi_check: function (frm) {
+		console.log("--------transportation_multi_check---------")
 		frm.transportation = frappe.ui.form.make_control({
 			parent: frm.fields_dict.transportation_multicheck_html.$wrapper.addClass('text-center'),
 			render_input: true,
@@ -15,6 +16,10 @@ frappe.ui.form.on('Warehouse Receipt', {
 			}
 		});
 
+	},
+
+	refresh: function(frm) {
+		frm.events.transportation_multi_check(frm);
 	},
 
 	setup: function (frm) {
@@ -54,6 +59,7 @@ frappe.ui.form.on('Warehouse Receipt', {
 				}
 			}
 		});
+
 	},
 
 	// Custom Functions
@@ -106,8 +112,56 @@ frappe.ui.form.on('Warehouse Receipt', {
 			frm.events.show_alerts(frm); // FIXME: Work on this
 		});
 	},
+    agent: function(frm) {
+        if (!frm.doc.agent) {
+            return;
+        }
 
-	show_alerts(frm) {
+        fetch_packages_by_agent_and_transportation(frm);
+    },
+    
+    transportation: function(frm) {
+        if (!frm.doc.agent) {
+            return;
+        }
+
+        fetch_packages_by_agent_and_transportation(frm);
+    },
+	
+	
+	// agent: function (frm) {
+	// 	if (!frm.doc.agent) {
+	// 		return;
+	// 	}
+
+	// 	// We clear the table each time to avoid duplication
+	// 	frm.clear_table('warehouse_receipt_lines');
+
+	// 	frappe.call({
+	// 		method: 'cargo_management.shipment_management.utils.get_parcel_in_parcel',
+	// 		type: 'GET',
+	// 		args: {agent: frm.doc.agent},
+	// 		freeze: true,
+	// 		freeze_message: __('Adding Packages...'),
+	// 	}).then(r => {
+
+	// 		r.message.packages.forEach(parcel_doc => {
+	// 			frm.add_child('warehouse_receipt_lines', {
+	// 				'parcel': parcel_doc.name,
+	// 				'parcel_transportation': parcel_doc.parcel_transportation,
+	// 				// 'item_code': package_doc.item_code, TODO: This is not working, because the package can have more than one item code
+	// 				'customer': parcel_doc.customer,
+	// 				'customer_name': parcel_doc.customer_name,
+	// 				'type': parcel_doc.type,
+	// 			});
+	// 		});
+
+	// 		// Refresh the modified tables inside the callback after execution is done
+	// 		frm.refresh_field('warehouse_receipt_lines');
+	// 	});
+	// },
+
+	show_alerts: function(frm) {
 		// TODO: Make this come from API?
 		frm.dashboard.clear_headline();
 
@@ -117,5 +171,37 @@ frappe.ui.form.on('Warehouse Receipt', {
 		}
 	},
 });
+function fetch_packages_by_agent_and_transportation(frm) {
+    // نزيل بيانات الجدول الحالية لتجنب التكرار
+    frm.clear_table('warehouse_receipt_lines');
 
+    frappe.call({
+        method: 'cargo_management.warehouse_management.utils.get_packages_by_agent_and_transportation',
+        type: 'GET',
+        args: {
+            agent: frm.doc.agent,
+            transportation: frm.doc.transportation
+        },
+        freeze: true,
+        freeze_message: __('Adding Packages...'),
+    }).then(r => {
+        r.message.packages.forEach(package_doc => {
+            frm.add_child('warehouse_receipt_lines', {
+                'parcel': package_doc.name,
+                'parcel_transportation': package_doc.transportation,  // إضافة الحقل transportation
+                'parcel_customer': package_doc.shipper_name,
+				'parcel_customer_name':package_doc.receiver_name,
+				'type': package_doc.piece_type,  // إضافة الحقل piece_type
+				'warehouse_est_weight':package_doc.total_actual_weight,
+				'volumetric_weight': package_doc.total_volumetric_weight,
+                'length': package_doc.total_net_length,
+                'width': package_doc.total_net_width,
+                'height': package_doc.total_net_height,
+            });
+        });
+
+        // تحديث الجدول بعد إضافة البيانات
+        frm.refresh_field('warehouse_receipt_lines');
+    });
+}
 frappe.ui.form.on('Warehouse Receipt Line', {}); // FIXME 134

@@ -123,6 +123,3 @@ cargo_management = {
 	}
 
 };
-// TODO 98: Working on Frappe Boot Info!
-// TODO: 135(Bracket) WORKING on TransportationMultiSelect Single Control
-// 1 error, 5 warning, 2 warning, 8 typos

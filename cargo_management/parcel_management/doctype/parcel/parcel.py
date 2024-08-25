@@ -7,7 +7,11 @@ from .api.api_17track import API17Track
 from .api.easypost_api import EasyPostAPI
 from .constants import Status, StatusMessage
 from .utils import ParcelStateMachine
+from frappe.utils import nowdate, cstr, cint, flt, comma_or, now
+import json
 
+import random
+import string
 
 class Parcel(Document):
 	# begin: auto-generated types
@@ -19,6 +23,9 @@ class Parcel(Document):
 		from cargo_management.parcel_management.doctype.parcel_content.parcel_content import ParcelContent
 		from frappe.types import DF
 
+		agent: DF.Link
+		amended_from: DF.Link | None
+		barcode: DF.Barcode | None
 		cargo_shipment: DF.Link | None
 		carrier: DF.Literal["Drop Off", "Pick Up", "Unknown", "Amazon", "USPS", "UPS", "DHL", "FedEx", "OnTrac", "Cainiao", "SF Express", "Yanwen", "YunExpress", "SunYou", "Pitney Bowes", "Veho"]
 		carrier_est_delivery: DF.Datetime | None
@@ -27,6 +34,7 @@ class Parcel(Document):
 		carrier_real_delivery: DF.Datetime | None
 		carrier_status: DF.Literal["Unknown", "Pre Transit", "In Transit", "Out For Delivery", "Available For Pickup", "Delivered", "Return To Sender", "Failure", "Cancelled", "Error"]
 		carrier_status_detail: DF.Data | None
+		company: DF.Link
 		content: DF.Table[ParcelContent]
 		currency: DF.Link | None
 		destination: DF.Data | None
@@ -41,8 +49,8 @@ class Parcel(Document):
 		net_total: DF.Currency
 		notes: DF.SmallText | None
 		order_date: DF.Date | None
-		order_number: DF.Data | None
 		parcel_price_rule: DF.Link | None
+		piece_type: DF.Literal["Box", "Envelope", "Pallet", "Carton", "Luggage", "Crate", "Others"]
 		receiver_address: DF.Data | None
 		receiver_email: DF.Data | None
 		receiver_name: DF.Link | None
@@ -103,11 +111,8 @@ class Parcel(Document):
 		return {}
    # --------------------------------------
 	#@override
-	def save(self, request_data_from_api=False, *args, **kwargs):
+	def save(self, *args, **kwargs):
 		""" Override def to change validation behaviour. Useful when called from outside a form. """
-		# if request_data_from_api:  # If True we fetch data from API, ignore ALL checks and save it.
-		# 	self.flags.ignore_permissions = self.flags.ignore_validate = self.flags.ignore_mandatory = self.flags.ignore_links = True
-		# 	# self.request_data_from_api()
 
 		return super(Parcel, self).save(*args, **kwargs)
 
@@ -121,13 +126,10 @@ class Parcel(Document):
 			
 	def before_save(self):
 		""" Before saved in DB and after validated. Add new data. This runs on Insert(Create) or Save(Update)"""
+
 		if self.is_new():
-			pass
-			# self.request_data_from_api()
-			# TODO: WORK ON THIS CHANGE!
+			self.get_generated_barcode()
 		elif self.has_value_changed('shipper') or self.has_value_changed('tracking_number'):  # Exists and data has changed
-			# self.easypost_id = None  # Value has changed. We reset the ID. FIXME: Move this when we have new APIs.
-			# self.request_data_from_api()
 			frappe.msgprint("Shipper or Tracking Number has changed, we have requested new data.", indicator='yellow', alert=True)
 
 	def change_status(self, new_status):
@@ -155,6 +157,14 @@ class Parcel(Document):
 			return True
 
 		return False
+
+	def get_generated_barcode(self):
+		"""
+		Fetch the barcode type from the Shipment Settings doctype and generate a barcode based on the type.
+		"""
+		shipment_settings = frappe.get_doc("Shipment Settings")
+		barcode_type = shipment_settings.barcode_type
+		self.barcode = generate_barcode(barcode_type)
 
 	@property
 	def explained_status(self):
@@ -253,67 +263,19 @@ class Parcel(Document):
 
 		return {'message': message, 'color': color}
 
-	# def request_data_from_api(self):
-	# 	""" This selects the corresponding API to request data. Using Polymorphism. """
-	# 	carrier_api = frappe.get_file_json(frappe.get_app_path('Cargo Management', 'public', 'carriers.json'))['CARRIERS'].get(self.carrier, {}).get('api')
 
-	# 	print('TRY: MATCHING THE CARRIER_API')
-	# 	match carrier_api:
-	# 		case 'EasyPost':
-	# 			api_data = self._request_data_from_easypost_api()
-	# 		case '17Track':
-	# 			api_data = self._request_data_from_17track_api()
-	# 		case _:
-	# 			frappe.msgprint(_('Parcel is handled by a carrier we can\'t track.'), indicator='red', alert=True)
-	# 			return
 
-	# 	if not api_data:  # HOTFIX: We should always return something?
-	# 		return  # If we don't return, the try will fail, and api_data.get will raise a big error(None has not .get())
+	# def update_from_api_data(self, api_data: dict) -> None:
+	# 	""" This updates the parcel with the data from the API. """
+	# 	print(api_data)
+	# 	self.__dict__.update(api_data)  # Updating all the DICT to the Parcel DocType
 
-	# 	try:
-	# 		print('ELSE: UPDATING FROM API DATA')
-	# 		self.update_from_api_data(api_data)  # Data from API that will be saved
-	# 		frappe.msgprint(_('Parcel has been updated from {} API.').format(carrier_api), indicator='green', alert=True)
-	# 	except Exception as e:
-	# 		frappe.log_error(f"17Track API: {type(e).__name__} -> {e}", reference_doctype='Parcel', reference_name=api_data.get('data', {}).get('number', None))
-
-	# 	print('OUTSIDE TRY: Saliendo del TRY')
-
-	# def _request_data_from_easypost_api(self) :
-	# 	""" Handles POST or GET to the Easypost API. Also parses the data. """
-	# 	try:
-	# 		if self.easypost_id:  # Parcel exists on Database. Request updates from API.
-	# 			return EasyPostAPI(self.carrier).retrieve_package_data(self.easypost_id)
-	# 		else:  # Parcel don't exist on System or EasyPost. We create a new one and attach it.
-	# 			return EasyPostAPI(self.carrier).register_package(self.tracking_number)
-	# 	except EasyPostAPIError as e:
-	# 		print('EXCEPT: Catching inside the requestor')
-	# 		frappe.msgprint(msg=str(e.__dict__), title='EasyPost API Error', raise_exception=False, indicator='red')
-
-	# FIXME: 6 - 10 - 81
-	# def _request_data_from_17track_api(self):
-	# 	try:
-	# 		if self.easypost_id:
-	# 			return API17Track(self.carrier).retrieve_package_data(self.tracking_number)
-	# 		else:
-	# 			api_data = API17Track(self.carrier).register_package(self.tracking_number)
-	# 			self.easypost_id = api_data['tag']  # api_data.get('tag', frappe.generate_hash(length=10))
-	# 			return api_data
-	# 	except Exception as e:
-	# 		frappe.msgprint(msg=str(e), title='17Track API Error', raise_exception=False, indicator='red')
-	# 		return None  # HOTFIX for "if not api_data:"
-
-	def update_from_api_data(self, api_data: dict) -> None:
-		""" This updates the parcel with the data from the API. """
-		print(api_data)
-		self.__dict__.update(api_data)  # Updating all the DICT to the Parcel DocType
-
-		if api_data['carrier_status'] == 'Delivered':  # or api_data['carrier_status_detail'] == 'Arrived At Destination':
-			self.change_status('Awaiting Confirmation')
-		elif api_data['carrier_status'] == 'Return To Sender' or self.carrier_status_detail == 'Return':
-			self.change_status('Returned to Sender')
-		else:  # TODO: Change the status when the carrier status: failure, cancelled, error
-			self.change_status('Awaiting Receipt')
+	# 	if api_data['carrier_status'] == 'Delivered':  # or api_data['carrier_status_detail'] == 'Arrived At Destination':
+	# 		self.change_status('Awaiting Confirmation')
+	# 	elif api_data['carrier_status'] == 'Return To Sender' or self.carrier_status_detail == 'Return':
+	# 		self.change_status('Returned to Sender')
+	# 	else:  # TODO: Change the status when the carrier status: failure, cancelled, error
+	# 		self.change_status('Awaiting Receipt')
 
 	def _awaiting_confirmation_or_in_extraordinary_confirmation(self):
 		if self.carrier_real_delivery:
@@ -349,13 +311,111 @@ class Parcel(Document):
 
 		return message, color
 
-# 294(HOTFIX) -> 250(WORKING) FIXME: Better way to update the doc: create some core method that returns a Object that we can concat :D
-# 248 EasyPost DONE, Now 17 Track -> 238(Production | We need to avoid extra 'try')
-# 241: Retornanos data normalizada desde las API, ahora debemos de hacer Polymorphism to select the API's
 
-# FIXME: 19 warning, 20 w warning, 83 typos -> 287
-# FIXME: 2 warning, 20 w warning, 85 typos -> 276
-# 292 Refactor de constantes y estados
-# FIXME 311: 2 warning, 29 w warning, 21 typos -> 276 | Corregir State Machine y COLOR usage!
+@frappe.whitelist()
+def create_sales_invoice(doc, rows):
+		doc = frappe.get_doc(json.loads(doc))
+		rows = json.loads(rows)
+		
+		if not rows:
+			return
+		# if not doc.currency:
+		# 		doc.currency = frappe.defaults.get_user_default("currency")  # Set default currency if not provided
 
- 
+		items = []
+		item_row_per = []
+
+		for row in rows:
+			item = frappe._dict({
+				"item_code": row["item_code"],
+				"qty": 1,
+				"uom": frappe.get_value("Item", row["item_code"], "stock_uom"),
+				"package": doc.get("name"),
+				"rate": row["rate"],
+				"description": row["description"],
+			})
+			item_row_per.append([row, item])
+			items.append(item)
+		
+		invoice = frappe.get_doc({
+			"doctype": "Sales Invoice",
+			"customer": doc.shipper_name,
+			"currency": doc.currency,
+			"posting_date": nowdate(),
+			"company": doc.company,
+			"items": items,
+		})
+
+		frappe.flags.ignore_account_permission = True
+		invoice.set_taxes()
+		invoice.set_missing_values()
+		invoice.flags.ignore_mandatory = True
+		invoice.calculate_taxes_and_totals()
+		invoice.insert(ignore_permissions=True)
+
+		for item in doc.content:
+			if item.name in [i["name"] for i in rows]:
+				item.invoice = invoice.name
+    
+		doc.save()
+
+		frappe.msgprint(_("Sales Invoice {0} Created").format(invoice.name), alert=True)
+		return invoice
+
+
+# -------------------------------------------------------------------------
+def generate_barcode(barcode_type):
+    """
+    Generate a barcode based on the given barcode type.
+    """
+    barcode = ''
+
+    if barcode_type == 'EAN':
+        barcode = str(random.randint(1000000000000, 9999999999999))
+    elif barcode_type == 'UPC-A':
+        barcode = str(random.randint(100000000000, 999999999999))
+    elif barcode_type == 'CODE-39':
+        barcode = 'C39-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+    elif barcode_type == 'EAN-12':
+        barcode = str(random.randint(100000000000, 999999999999))
+    elif barcode_type == 'EAN-8':
+        barcode = str(random.randint(10000000, 99999999))
+    elif barcode_type in ('GS1', 'GTIN'):
+        barcode = str(random.randint(1000000000000, 9999999999999))
+    elif barcode_type == 'ISBN-10':
+        barcode = str(random.randint(100000000, 999999999))
+        check_digit_10 = calculate_isbn_10_check_digit(barcode)
+        barcode += str(check_digit_10)
+    elif barcode_type in ('ISBN-13', 'ISBN'):
+        barcode = '978' + str(random.randint(100000000000, 999999999999))[3:]
+        check_digit_13 = calculate_isbn_13_check_digit(barcode)
+        barcode += str(check_digit_13)
+    elif barcode_type == 'ISSN':
+        barcode = str(random.randint(10000000, 99999999))
+    elif barcode_type == 'JAN':
+        barcode = str(random.randint(100000000000, 999999999999))
+    elif barcode_type == 'PZN':
+        barcode = 'PZN-' + str(random.randint(1000000, 9999999))
+    elif barcode_type == 'UPC':
+        barcode = str(random.randint(100000000000, 999999999999))
+    else:
+        print(f'Unknown barcode type: {barcode_type}')
+        barcode = 'CR-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+
+    return barcode
+
+def calculate_isbn_10_check_digit(isbn_10):
+    """
+    Calculate the check digit for an ISBN-10 barcode.
+    """
+    total = sum(int(digit) * (10 - i) for i, digit in enumerate(isbn_10))
+    check_digit = total % 11
+    return 'X' if check_digit == 10 else check_digit
+
+def calculate_isbn_13_check_digit(isbn_13):
+    """
+    Calculate the check digit for an ISBN-13 barcode.
+    """
+    total = sum(int(digit) * (1 if i % 2 == 0 else 3) for i, digit in enumerate(isbn_13))
+    check_digit = 10 - (total % 10)
+    return check_digit if check_digit != 10 else 0

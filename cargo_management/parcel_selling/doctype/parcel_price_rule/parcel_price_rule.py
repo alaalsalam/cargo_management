@@ -33,14 +33,14 @@ class ParcelPriceRule(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from erpnext.accounts.doctype.shipping_rule_condition.shipping_rule_condition import ShippingRuleCondition
+		from cargo_management.parcel_selling.doctype.parcel_rule_condition.parcel_rule_condition import ParcelRuleCondition
 		from erpnext.accounts.doctype.shipping_rule_country.shipping_rule_country import ShippingRuleCountry
 		from frappe.types import DF
 
 		account: DF.Link
 		calculate_based_on: DF.Literal["Fixed", "Actual Weight", "Volumetric Weight"]
 		company: DF.Link
-		conditions: DF.Table[ShippingRuleCondition]
+		conditions: DF.Table[ParcelRuleCondition]
 		cost_center: DF.Link
 		countries: DF.Table[ShippingRuleCountry]
 		disabled: DF.Check
@@ -116,9 +116,9 @@ class ParcelPriceRule(Document):
 	def get_shipping_amount_from_rules(self, value):
 		for condition in self.get("conditions"):
 			if not condition.to_value or (flt(condition.from_value) <= flt(value) <= flt(condition.to_value)):
-				if self.calculate_based_on == "Volumetric Weight":
-					return condition.shipping_amount * value
-				return condition.shipping_amount
+				# if self.calculate_based_on == "Volumetric Weight":
+				# 	return condition.shipping_amount * value
+				return condition.shipping_amount * value
 
 		return 0.0
 
@@ -136,35 +136,6 @@ class ParcelPriceRule(Document):
 						shipping_country
 					)
 				)
-
-	def add_shipping_rule_to_tax_table(self, doc, shipping_amount):
-		shipping_charge = {
-			"charge_type": "Actual",
-			"account_head": self.account,
-			"cost_center": self.cost_center,
-		}
-		if self.shipping_rule_type == "Selling":
-			# check if not applied on purchase
-			if not doc.meta.get_field("taxes").options == "Sales Taxes and Charges":
-				frappe.throw(_("Shipping rule only applicable for Selling"))
-			shipping_charge["doctype"] = "Sales Taxes and Charges"
-		else:
-			# check if not applied on sales
-			if not doc.meta.get_field("taxes").options == "Purchase Taxes and Charges":
-				frappe.throw(_("Shipping rule only applicable for Buying"))
-
-			shipping_charge["doctype"] = "Purchase Taxes and Charges"
-			shipping_charge["category"] = "Valuation and Total"
-			shipping_charge["add_deduct_tax"] = "Add"
-
-		existing_shipping_charge = doc.get("taxes", filters=shipping_charge)
-		if existing_shipping_charge:
-			# take the last record found
-			existing_shipping_charge[-1].tax_amount = shipping_amount
-		else:
-			shipping_charge["tax_amount"] = shipping_amount
-			shipping_charge["description"] = self.label
-			doc.append("taxes", shipping_charge)
 
 	def sort_shipping_rule_conditions(self):
 		"""Sort Shipping Rule Conditions based on increasing From Value"""
@@ -209,3 +180,35 @@ class ParcelPriceRule(Document):
 
 			msgprint("\n".join(messages), raise_exception=OverlappingConditionError)
 
+
+
+
+	def add_shipping_rule_to_tax_table(self, doc, shipping_amount):
+		shipping_charge = {
+			"charge_type": "Actual",
+			"account_head": self.account,
+			"cost_center": self.cost_center,
+		}
+		if self.shipping_rule_type == "Selling":
+			# check if not applied on purchase
+			if not doc.meta.get_field("taxes").options == "Sales Taxes and Charges":
+				frappe.throw(_("Shipping rule only applicable for Selling"))
+			shipping_charge["doctype"] = "Sales Taxes and Charges"
+		else:
+			# check if not applied on sales
+			if not doc.meta.get_field("taxes").options == "Purchase Taxes and Charges":
+				frappe.throw(_("Shipping rule only applicable for Buying"))
+
+			shipping_charge["doctype"] = "Purchase Taxes and Charges"
+			shipping_charge["category"] = "Valuation and Total"
+			shipping_charge["add_deduct_tax"] = "Add"
+
+		existing_shipping_charge = doc.get("taxes", filters=shipping_charge)
+		if existing_shipping_charge:
+			# take the last record found
+			existing_shipping_charge[-1].tax_amount = shipping_amount
+		else:
+			shipping_charge["tax_amount"] = shipping_amount
+			shipping_charge["description"] = self.label
+			doc.append("taxes", shipping_charge)
+	

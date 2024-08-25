@@ -13,6 +13,12 @@ app_license = "agpl-3.0"
 app_include_css = "cargo_management.bundle.css"
 app_include_js = "cargo_management.bundle.js"
 
+# app_include_css = "/assets/cargo_management/dist/css/cargo_management.bundle.6RMC5W2E.css"
+# app_include_css = "/assets/cargo_management/dist/css-rtl/cargo_management.bundle.EMV7DFB6.css"
+# app_include_css = "/assets/cargo_management/scss/cargo_management.bundle.scss"
+# app_include_css = "/assets/cargo_management/scss/colors.scss"
+# app_include_js = "/assets/cargo_management/js/overrides.scss"
+
 # include JS, CSS files in header of web template
 # web_include_css = "/assets/cargo_management/css/parcel_management.css"
 # web_include_js = "/assets/cargo_management/js/parcel_management.js"

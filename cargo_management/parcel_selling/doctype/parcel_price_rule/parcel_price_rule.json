@@ -143,7 +143,7 @@
  "icon": "fa fa-truck",
  "idx": 1,
  "links": [],
- "modified": "2024-07-25 00:37:23.134923",
+ "modified": "2024-08-23 22:28:35.767477",
  "modified_by": "Administrator",
  "module": "Parcel Selling",
  "name": "Parcel Price Rule",
@@ -189,6 +189,24 @@
    "role": "Sales Master Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Parcel User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent User",
+   "share": 1
   }
  ],
  "sort_field": "modified",

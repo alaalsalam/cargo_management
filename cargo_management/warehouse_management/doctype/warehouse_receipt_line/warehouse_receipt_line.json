@@ -27,7 +27,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Type",
-   "options": "\nBox\nEnvelope\nPallet\nMail"
+   "options": "\nBox\nEnvelope\nPallet\nMail",
+   "read_only": 1
   },
   {
    "fieldname": "dimmensions_section",
@@ -36,14 +37,17 @@
   {
    "columns": 1,
    "description": "Estimated weight as measured by the warehouse (if available).",
+   "fetch_from": "parcel.total_actual_weight",
    "fieldname": "warehouse_est_weight",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Weight (lb)",
    "non_negative": 1,
-   "precision": "2"
+   "precision": "2",
+   "read_only": 1
   },
   {
+   "fetch_from": "parcel.total_volumetric_weight",
    "fieldname": "volumetric_weight",
    "fieldtype": "Float",
    "label": "Volumetric Weight",
@@ -57,11 +61,13 @@
   },
   {
    "columns": 1,
+   "fetch_from": "parcel.total_net_length",
    "fieldname": "length",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Length (cm)",
-   "precision": "2"
+   "precision": "2",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_12",
@@ -69,12 +75,14 @@
   },
   {
    "columns": 1,
+   "fetch_from": "parcel.total_net_width",
    "fieldname": "width",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Width (cm)",
    "precision": "2",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "fieldname": "column_break_14",
@@ -82,12 +90,14 @@
   },
   {
    "columns": 1,
+   "fetch_from": "parcel.total_net_height",
    "fieldname": "height",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Height (cm)",
    "precision": "2",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "bold": 1,
@@ -98,6 +108,7 @@
    "in_list_view": 1,
    "label": "Parcel",
    "options": "Parcel",
+   "read_only": 1,
    "reqd": 1,
    "search_index": 1
   },
@@ -111,26 +122,28 @@
   },
   {
    "bold": 1,
-   "fetch_from": "parcel.customer_name",
+   "fetch_from": "parcel.shipper_name",
    "fieldname": "parcel_customer_name",
-   "fieldtype": "Read Only",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Customer Name"
+   "label": "Receiver Name",
+   "options": "Customer",
+   "read_only": 1
   },
   {
    "bold": 1,
-   "fetch_from": "parcel.customer",
+   "fetch_from": "parcel.shipper_name",
    "fieldname": "parcel_customer",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Customer",
+   "label": "Shipper Name",
    "options": "Customer",
    "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2023-10-13 17:21:53.331524",
+ "modified": "2024-08-22 14:40:12.051606",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt Line",

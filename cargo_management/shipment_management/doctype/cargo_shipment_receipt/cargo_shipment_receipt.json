@@ -109,7 +109,7 @@
    "link_fieldname": "custom_cargo_shipment_receipt"
   }
  ],
- "modified": "2023-09-18 07:51:25.410653",
+ "modified": "2024-08-22 17:42:36.522292",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Cargo Shipment Receipt",
@@ -136,6 +136,30 @@
    "report": 1,
    "role": "Desk User",
    "share": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Fleet Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent User",
+   "select": 1,
+   "share": 1,
+   "write": 1
   }
  ],
  "search_fields": "cargo_shipment,status",

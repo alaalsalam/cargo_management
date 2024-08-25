@@ -1,8 +1,29 @@
 frappe.ui.form.on('Parcel', {
 
+	create_invoice(frm) {
+		if (frm.is_dirty()) {
+			frappe.throw(__("Please Save First"));
+			return;
+		}
+	
+		let rows = frm.doc.content.filter(i => !i.invoice);  // استخدام كل الصفوف التي لم تصدر فاتورة لها
+		if (rows.length) {
+			frappe.call({
+				method: "cargo_management.parcel_management.doctype.parcel.parcel.create_sales_invoice",
+				args: {
+					doc: frm.doc,
+					rows: rows
+				},
+				callback: function(data) {
+					frappe.set_route('Form', data.message.doctype, data.message.name);
+				}
+			});
+		} else {
+			frappe.msgprint(__("All Rows are Invoiced or No Rows Available!"));
+		}
+	},
 	setup(frm) {
 		frm.page.sidebar.toggle(false);
-
 		// FIXME: Observe if the indicator changes. This is useful for the 'Not Saved' status aka is_dirty(). We cannot read that from the events available
 		const observer = new MutationObserver(() => {
 			frm.layout.show_message('');     // Clear Message because it's possible that data changes!
@@ -25,8 +46,9 @@ frappe.ui.form.on('Parcel', {
 		});
 
 		// Setting Currency Labels
-		frm.set_currency_labels(['total', 'shipping_amount'], 'USD');
-		frm.set_currency_labels(['rate', 'amount'], 'USD', 'content');
+		// frm.set_currency_labels(['total', 'shipping_amount'], 'USD');
+		// frm.set_currency_labels(['rate', 'amount'], 'USD', 'content');
+	
 	},
 
 	refresh(frm) {
@@ -34,11 +56,11 @@ frappe.ui.form.on('Parcel', {
 			return;
 		}
 
-		// frm.page.indicator.parent().append(cargo_management.transportation_indicator(frm.doc.transportation)); // Add Extra Indicator
+		frm.page.indicator.parent().append(cargo_management.transportation_indicator(frm.doc.transportation)); // Add Extra Indicator
 
-		frm.events.show_explained_status(frm); // Show 'Explained Status' as Intro Message
+		// frm.events.show_explained_status(frm); // Show 'Explained Status' as Intro Message
 		frm.events.build_custom_actions(frm);  // Adding custom buttons
-
+		
 		//frm.trigger('parcel_preview_dialog');
 	},
 
@@ -57,14 +79,12 @@ frappe.ui.form.on('Parcel', {
 	shipping_amount(frm) {
 		frm.events.calculate_total(frm);
 	},
-
 	// Custom Functions
 
 	show_explained_status(frm) {
 		frm.doc.explained_status.message.forEach(m => frm.layout.show_message(m, ''));  // FIXME: Core overrides color
 		frm.layout.message.removeClass().addClass('form-message ' + frm.doc.explained_status.color);
 	},
-
 	build_custom_actions(frm) {
 		// const carriers_settings = cargo_management.load_carrier_settings(frm.doc.carrier);
 
@@ -77,20 +97,6 @@ frappe.ui.form.on('Parcel', {
 		frm.add_custom_button(__('Previwe'), () => frm.events.parcel_preview_dialog(frm));
 
 		// carriers_settings.urls.forEach(url => frm.add_custom_button(url.title, () => window.open(url.url + frm.doc.tracking_number)));
-	},
-
-	get_data_from_api(frm) {
-		// TODO: WORK ON THIS. We have to delete some data
-		frappe.call({
-			method: 'cargo_management.parcel_management.doctype.parcel.actions.get_data_from_api',
-			freeze: true, freeze_message: __('Updating from Carrier...'), args: {source_name: frm.doc.name},
-			callback: (r) => {
-				// FIXME: "Not Saved" indicator cannot be changed.
-				console.log('Need to work in here. problems in v14');
-				//frappe.model.sync(r.message);
-				//frm.refresh();
-			}
-		});
 	},
 
 	parcel_preview_dialog(frm) {
@@ -157,7 +163,6 @@ frappe.ui.form.on('Parcel', {
 
 		</div>`);
 	},
-
 	//https://github.com/frappe/frappe/pull/12471 and https://github.com/frappe/frappe/pull/14181/files
 	// sales_order_dialog(frm) {
 	// 	const so_dialog = new frappe.ui.form.MultiSelectDialog({
@@ -250,7 +255,7 @@ frappe.ui.form.on('Parcel', {
 		console.log("--------calculate_content_amounts_and_total------")
 		let row = locals[cdt][cdn]; // Getting Content Child Row being edited
 
-		row.amount = row.qty * row.rate;
+		// row.amount = row.qty * row.rate;
 		row.volumetric_weight = (row.length * row.width * row.height) / 1000000;
 		refresh_field('amount', cdn, 'content');
 
@@ -298,4 +303,3 @@ frappe.ui.form.on('Parcel Content', {
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
 	},
 });
-//201 - FIXME: Giving PROBLEMS

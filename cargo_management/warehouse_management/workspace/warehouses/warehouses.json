@@ -9,13 +9,14 @@
  "hide_custom": 0,
  "icon": "change",
  "idx": 0,
+ "indicator_color": "",
  "is_hidden": 0,
- "label": "Warehouse",
+ "label": "Warehouses",
  "links": [],
- "modified": "2024-01-18 08:41:38.752612",
+ "modified": "2024-08-17 12:59:46.821467",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
- "name": "Warehouse",
+ "name": "Warehouses",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
@@ -28,7 +29,7 @@
   }
  ],
  "roles": [],
- "sequence_id": 5.0,
+ "sequence_id": 14.0,
  "shortcuts": [
   {
    "color": "Orange",
@@ -54,5 +55,5 @@
    "type": "DocType"
   }
  ],
- "title": "Warehouse"
+ "title": "Warehouses"
 }

@@ -23,23 +23,28 @@
   "receiver_address",
   "receiver_email",
   "receivers_card_image",
+  "destination",
   "totals_section",
   "column_break_5tood",
+  "company",
+  "carrier",
+  "agent",
   "transportation",
   "shipper",
-  "destination",
   "column_break_4",
+  "piece_type",
   "mode_of_payment",
   "order_date",
+  "status",
+  "barcode",
   "column_break_5",
-  "carrier",
   "est_departure",
   "est_delivery_1",
   "est_delivery_2",
-  "status",
   "currency",
   "content_section",
   "content",
+  "create_invoice",
   "section_break_dzqj",
   "parcel_price_rule",
   "weight_type",
@@ -58,7 +63,6 @@
   "notes",
   "section_break_rxsz",
   "tracking_number",
-  "order_number",
   "naming_series",
   "has_taxes",
   "additional_data_tab",
@@ -72,12 +76,15 @@
   "carrier_status",
   "carrier_status_detail",
   "carrier_last_detail",
+  "connections_tab",
   "links_section",
+  "column_break_benm",
   "cargo_shipment",
   "explained_status",
   "column_break_heai",
   "warehouse_receipt",
-  "easypost_id"
+  "easypost_id",
+  "amended_from"
  ],
  "fields": [
   {
@@ -92,6 +99,7 @@
    "in_standard_filter": 1,
    "label": "Tracking Number",
    "no_copy": 1,
+   "read_only": 1,
    "unique": 1
   },
   {
@@ -159,10 +167,8 @@
    "description": "Current status of the package",
    "fieldname": "carrier_status",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
    "label": "Carrier status",
    "options": "Unknown\nPre Transit\nIn Transit\nOut For Delivery\nAvailable For Pickup\nDelivered\nReturn To Sender\nFailure\nCancelled\nError",
-   "read_only": 1,
    "search_index": 1
   },
   {
@@ -202,12 +208,6 @@
    "fieldtype": "Small Text",
    "label": "Notes",
    "max_height": "6rem"
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "order_number",
-   "fieldtype": "Data",
-   "label": "Number of Order"
   },
   {
    "fieldname": "content_section",
@@ -259,7 +259,6 @@
    "in_standard_filter": 1,
    "label": "Cargo Shipment",
    "options": "Cargo Shipment",
-   "read_only": 1,
    "search_index": 1
   },
   {
@@ -386,7 +385,6 @@
    "fieldname": "shipper_address",
    "fieldtype": "Data",
    "label": "Shipper Address",
-   "options": "Territory",
    "read_only": 1
   },
   {
@@ -419,7 +417,6 @@
    "fieldname": "receiver_address",
    "fieldtype": "Data",
    "label": "Receiver Address",
-   "options": "Territory",
    "read_only": 1
   },
   {
@@ -430,6 +427,8 @@
    "read_only": 1
   },
   {
+   "fetch_from": "agent.mode_of_payment",
+   "fetch_if_empty": 1,
    "fieldname": "mode_of_payment",
    "fieldtype": "Link",
    "label": "Mode of Payment",
@@ -442,6 +441,7 @@
   {
    "fieldname": "additional_data_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Additional Data"
   },
   {
@@ -455,7 +455,8 @@
   {
    "fieldname": "total_qty",
    "fieldtype": "Int",
-   "label": "Total Quantity"
+   "label": "Total Quantity",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_jzgx",
@@ -468,22 +469,26 @@
   {
    "fieldname": "total_net_length",
    "fieldtype": "Float",
-   "label": "Total Net Length"
+   "label": "Total Net Length",
+   "read_only": 1
   },
   {
    "fieldname": "total_net_width",
    "fieldtype": "Float",
-   "label": "Total Net Width"
+   "label": "Total Net Width",
+   "read_only": 1
   },
   {
    "fieldname": "total_net_height",
    "fieldtype": "Float",
-   "label": "Total Net Height"
+   "label": "Total Net Height",
+   "read_only": 1
   },
   {
    "fieldname": "total_volumetric_weight",
    "fieldtype": "Float",
-   "label": "Total Volumetric Weight"
+   "label": "Total Volumetric Weight",
+   "read_only": 1
   },
   {
    "fieldname": "weight_type",
@@ -532,7 +537,8 @@
   {
    "fieldname": "total_actual_weight",
    "fieldtype": "Float",
-   "label": "Total Actual Weight"
+   "label": "Total Actual Weight",
+   "read_only": 1
   },
   {
    "fieldname": "naming_series",
@@ -542,7 +548,63 @@
   },
   {
    "fieldname": "section_break_rxsz",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "piece_type",
+   "fieldtype": "Select",
+   "label": "Piece Type",
+   "options": "Box\nEnvelope\nPallet\nCarton\nLuggage\nCrate\nOthers"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Parcel",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "create_invoice",
+   "fieldtype": "Button",
+   "label": "Create Invoice"
+  },
+  {
+   "description": "Depending on the type of barcode in the shipment settings",
+   "fieldname": "barcode",
+   "fieldtype": "Barcode",
+   "label": "Barcode",
+   "no_copy": 1,
+   "read_only": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "agent",
+   "fieldtype": "Link",
+   "label": "Agent",
+   "options": "Agent",
+   "reqd": 1
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
+  },
+  {
+   "fieldname": "column_break_benm",
+   "fieldtype": "Column Break"
   }
  ],
  "links": [
@@ -572,7 +634,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-07-25 01:47:09.752981",
+ "modified": "2024-08-23 22:36:52.673888",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",
@@ -581,12 +643,36 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
+   "export": 1,
+   "if_owner": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User",
+   "role": "Parcel User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cargo User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent User",
    "share": 1,
    "write": 1
   },
@@ -595,11 +681,10 @@
    "delete": 1,
    "email": 1,
    "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales Manager",
+   "role": "System Manager",
    "share": 1,
    "write": 1
   },
@@ -611,24 +696,10 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Item Manager",
+   "role": "Shipping Manager",
+   "select": 1,
    "share": 1,
    "write": 1
-  },
-  {
-   "permlevel": 1,
-   "read": 1,
-   "role": "Sales Manager",
-   "write": 1
-  },
-  {
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Desk User",
-   "share": 1
   }
  ],
  "search_fields": "tracking_number,shipper_name",

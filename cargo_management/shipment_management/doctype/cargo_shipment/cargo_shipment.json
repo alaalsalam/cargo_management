@@ -3,24 +3,39 @@
  "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "prompt",
+ "autoname": "naming_series:",
  "creation": "2020-06-14 12:54:12.963505",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "supplier",
+  "section_break_kdry",
   "departure_date",
   "expected_arrival_date",
   "arrival_date",
-  "column_break_crqf",
   "column_break_2",
   "transportation",
   "status",
   "mute_emails",
+  "naming_series",
   "section_break_n2zav",
   "warehouse_lines",
   "sb_0",
+  "scan_barcode",
   "cargo_shipment_lines",
+  "create_invoice",
+  "section_break_ssuk",
+  "total_qty",
+  "total_actual_weight",
+  "company",
+  "currency",
+  "column_break_bufk",
+  "shipping_amount",
+  "total",
+  "net_total",
+  "section_break_ebep",
+  "signature_udal",
   "additional_information_section",
   "pieces",
   "section_break_mukh7",
@@ -156,8 +171,96 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "column_break_crqf",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "SHIP-.YYYY.-",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Int",
+   "label": "Total Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "shipping_amount",
+   "fieldtype": "Currency",
+   "label": "Shipping Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ssuk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_bufk",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "options": "USD",
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_total",
+   "fieldtype": "Currency",
+   "label": "Net Total",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_actual_weight",
+   "fieldtype": "Float",
+   "label": "Total Actual Weight",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ebep",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "signature_udal",
+   "fieldtype": "Signature",
+   "label": "Signature"
+  },
+  {
+   "fieldname": "create_invoice",
+   "fieldtype": "Button",
+   "label": "Create Invoice"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "section_break_kdry",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "Univesal Shipping.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "scan_barcode",
+   "fieldtype": "Data",
+   "label": "Scan Barcode",
+   "options": "Barcode"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -178,11 +281,11 @@
    "link_fieldname": "custom_cargo_shipment"
   }
  ],
- "modified": "2023-10-13 13:41:46.635641",
+ "modified": "2024-08-23 22:30:00.713143",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Cargo Shipment",
- "naming_rule": "Set by user",
+ "naming_rule": "By \"Naming Series\" field",
  "nsm_parent_field": "parent_shipment",
  "owner": "Administrator",
  "permissions": [
@@ -228,6 +331,17 @@
    "report": 1,
    "role": "Desk User",
    "share": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cargo User",
+   "share": 1,
+   "write": 1
   }
  ],
  "show_name_in_global_search": 1,

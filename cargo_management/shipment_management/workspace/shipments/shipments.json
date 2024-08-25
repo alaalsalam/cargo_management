@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"iQokFeO2DK\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Awaiting Departure\",\"col\":4}},{\"id\":\"4gBPNDHr0o\",\"type\":\"spacer\",\"data\":{\"col\":4}},{\"id\":\"2pIs8gCGbv\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"In Transit\",\"col\":4}}]",
+ "content": "[{\"id\":\"iQokFeO2DK\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Awaiting Departure\",\"col\":4}},{\"id\":\"4gBPNDHr0o\",\"type\":\"spacer\",\"data\":{\"col\":4}},{\"id\":\"2pIs8gCGbv\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"In Transit\",\"col\":4}},{\"id\":\"Pc1ZoyRXkx\",\"type\":\"card\",\"data\":{\"card_name\":\"Cargo Shipment\",\"col\":4}},{\"id\":\"MVO-tLpOI_\",\"type\":\"card\",\"data\":{\"card_name\":\"Master\",\"col\":4}}]",
  "creation": "2021-09-29 19:52:39.419496",
  "custom_blocks": [],
  "docstatus": 0,
@@ -10,8 +10,67 @@
  "idx": 0,
  "is_hidden": 0,
  "label": "Shipments",
- "links": [],
- "modified": "2024-01-18 08:41:38.785913",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cargo Shipment",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cargo Shipment",
+   "link_count": 0,
+   "link_to": "Cargo Shipment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cargo Shipment Receipt",
+   "link_count": 0,
+   "link_to": "Cargo Shipment Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cargo Packing List",
+   "link_count": 0,
+   "link_to": "Cargo Packing List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Master",
+   "link_count": 1,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Agent",
+   "link_count": 0,
+   "link_to": "Agent",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2024-08-21 15:43:31.239777",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Shipments",
@@ -32,7 +91,7 @@
   }
  ],
  "roles": [],
- "sequence_id": 6.0,
+ "sequence_id": 14.0,
  "shortcuts": [],
  "title": "Shipments"
 }

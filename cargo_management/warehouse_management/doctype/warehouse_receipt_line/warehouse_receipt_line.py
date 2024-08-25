@@ -14,7 +14,7 @@ class WarehouseReceiptLine(Document):
 		length: DF.Float
 		parcel: DF.Link
 		parcel_customer: DF.Link | None
-		parcel_customer_name: DF.ReadOnly | None
+		parcel_customer_name: DF.Link | None
 		parcel_transportation: DF.ReadOnly | None
 		parent: DF.Data
 		parentfield: DF.Data

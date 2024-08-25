@@ -3,16 +3,17 @@
  "allow_copy": 1,
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "prompt",
+ "autoname": "naming_series:",
  "creation": "2020-06-14 12:50:41.615167",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "departure_date",
-  "column_break_hnxe",
+  "naming_series",
   "column_break_3",
   "transportation_multicheck_html",
+  "agent",
   "transportation",
   "status",
   "sb_0",
@@ -25,10 +26,6 @@
   "carrier_est_gross_weight"
  ],
  "fields": [
-  {
-   "fieldname": "column_break_hnxe",
-   "fieldtype": "Column Break"
-  },
   {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
@@ -77,15 +74,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "warehouse_receipt_lines",
-   "fieldtype": "Table",
-   "in_preview": 1,
-   "label": "Parcels",
-   "options": "Warehouse Receipt Line",
-   "read_only_depends_on": "eval: doc.status == 'Finished';",
-   "reqd": 1
-  },
-  {
    "depends_on": "eval: !doc.__islocal",
    "fieldname": "section_totals",
    "fieldtype": "Section Break"
@@ -125,22 +113,38 @@
    "fieldtype": "Float",
    "label": "Estimated Gross Weight by Carriers (in pounds)",
    "read_only": 1
-  }
- ],
- "links": [
+  },
   {
-   "is_child_table": 1,
-   "link_doctype": "Warehouse Receipt Line",
-   "link_fieldname": "parcel",
-   "parent_doctype": "Parcel",
-   "table_fieldname": "warehouse_receipt_lines"
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "SHIP-WAR-.YYYY.-",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse_receipt_lines",
+   "fieldtype": "Table",
+   "in_preview": 1,
+   "label": "Parcels",
+   "options": "Warehouse Receipt Line",
+   "read_only_depends_on": "eval: doc.status == 'Finished';",
+   "reqd": 1
+  },
+  {
+   "fieldname": "agent",
+   "fieldtype": "Link",
+   "label": "Agent",
+   "options": "Agent",
+   "reqd": 1
   }
  ],
- "modified": "2023-10-19 00:09:34.635987",
+ "links": [],
+ "modified": "2024-08-23 20:04:05.108486",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt",
- "naming_rule": "Set by user",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -187,6 +191,29 @@
    "report": 1,
    "role": "Desk User",
    "share": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent User",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cargo User",
+   "select": 1,
+   "share": 1,
+   "write": 1
   }
  ],
  "show_name_in_global_search": 1,

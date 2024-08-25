@@ -5,7 +5,6 @@ frappe.listview_settings['Parcel'] = {
 		['status', 'not in', ['Finished', 'Cancelled', 'Never Arrived', 'Returned to Sender']] // aka 'Active Parcels'
 	],
 
-	// TODO DELETE: 'consolidated_tracking_numbers' 12 Matches
 
 	onload(listview) {
 		const {tracking_number: tracking_number_field, customer_name: customer_name_field} = listview.page.fields_dict;
@@ -86,81 +85,79 @@ frappe.listview_settings['Parcel'] = {
 
 		// 	new frappe.ui.Dialog({animate: false, size: 'small', indicator: 'green', title: this.get_label, fields: fields}).show();
 		},
-		parcel_preview_dialog(frm) {
+		parcel_preview_dialog(doc) {
 			const preview_dialog = new frappe.ui.Dialog({
 				title: 'General Overview', size: 'extra-large',
 				fields: [
-					{fieldtype: 'HTML', fieldname: 'preview'},
+					{ fieldtype: 'HTML', fieldname: 'preview' },
 				]
 			});
-	
-			preview_dialog.show()
-			// <h3 class="text-center">${frm.doc.carrier} - ${frm.doc.tracking_number} ${cargo_management.transportation_indicator(frm.doc.transportation)}</h3>
-	
+		
+			preview_dialog.show();
+		
+			const content = doc.content || [];
+			const contentHtml = content.map(c => `
+				<li class="list-group-item">
+					Descripcion: <strong>${c.description}</strong> | Tracking: <strong>${c.tracking_number}</strong>
+				</li>`).join('');
+		
 			preview_dialog.fields_dict.preview.$wrapper.html(`
-			<div class="container">
-				<h3 class="text-center">${frm.doc.carrier} - ${frm.doc.tracking_number} - ###</h3>
-	
-				<div class="row">
-					<div class="col-6">
-						<div class="card">
-							<div class="card-header">Información General</div>
-							<ul class="list-group list-group-flush">
-								<li class="list-group-item">Shipper: <strong>${frm.doc.shipper}</strong></li>
-								<li class="list-group-item"># de Orden: <strong>${frm.doc.order_number}</strong></li>
-								<li class="list-group-item">Fecha de Compra: <strong>${frm.doc.order_date}</strong></li>
-							</ul>
+				<div class="container">
+					<h3 class="text-center">${doc.carrier} - ${doc.tracking_number} - ###</h3>
+					<div class="row">
+						<div class="col-6">
+							<div class="card">
+								<div class="card-header">Información General</div>
+								<ul class="list-group list-group-flush">
+									<li class="list-group-item">Shipper: <strong>${doc.shipper}</strong></li>
+									<li class="list-group-item"># de Orden: <strong>${doc.tracking_number}</strong></li>
+									<li class="list-group-item">Fecha de Compra: <strong>${doc.order_date}</strong></li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="card">
+								<div class="card-header">Descripcion</div>
+								<ul class="list-group list-group-flush">
+									${contentHtml}
+								</ul>
+							</div>
 						</div>
 					</div>
-					<div class="col-6">
-						<div class="card">
-							<div class="card-header">Descripcion</div>
-							<ul class="list-group list-group-flush">
-								${frm.doc.content.map((c) => {
-									return (`<li class="list-group-item">Descripcion: <strong>${c.description}</strong> | Tracking: <strong>${c.tracking_number}</strong></li>`);
-								}).join('') }
-							</ul>
+					<div class="d-flex flex-row justify-content-between align-items-start border rounded p-3 my-3">
+						<div>
+							<div class="mb-2">
+								<span class="badge badge-primary">Fecha de Orden</span>
+								<strong>${doc.order_date}</strong>
+							</div>
+						</div>
+						<div class="d-flex flex-column">
+							<div class="mb-2">
+								<span class="badge badge-secondary">Fecha Estimada de Llegada 1</span>
+								<strong>${doc.est_delivery_1}</strong>
+							</div>
+							<div>
+								<span class="badge badge-secondary">Fecha Estimada de Llegada 2</span>
+								<strong>${doc.est_delivery_2}</strong>
+							</div>
+						</div>
+						<div>
+							<div>
+								<span class="badge badge-success">Fecha Estimada de Despacho</span>
+								<strong>${doc.est_departure}</strong>
+							</div>
+						</div>
+						<div>
+							<div>
+								<span class="badge badge-success">Fecha Estimada de Entrega</span>
+								<strong>${doc.est_departure}</strong>
+							</div>
 						</div>
 					</div>
-				</div>
-	
-				<div class="d-flex flex-row justify-content-between align-items-start border rounded p-3 my-3">
-					<div>
-						<div class="mb-2"><span class="badge badge-primary">Fecha de Orden</span> <strong>${frm.doc.order_date}</strong></div>
-					</div>
-					<div class="d-flex flex-column">
-						<div class="mb-2"><span class="badge badge-secondary">Fecha Estimada de Llegada 1</span> <strong>${frm.doc.est_delivery_1}</strong></div>
-						<div><span class="badge badge-secondary">Fecha Estimada de Llegada 2</span> <strong>${frm.doc.est_delivery_2}</strong></div>
-					</div>
-					<div>
-						<div><span class="badge badge-success">Fecha Estimada de Despacho</span> <strong>${frm.doc.est_departure}</strong></div>
-					</div>
-					<div>
-						<div><span class="badge badge-success">Fecha Estimada de Entrega</span> <strong>${frm.doc.est_departure}</strong></div>
-					</div>
-				</div>
-	
-			</div>`);
-		},
-		// build_carrier_urls(section_label, lookup_field, carrier = null) {
-		// 	carrier = carrier || cargo_management.find_carrier_by_tracking_number(lookup_field).carrier;
+				</div>`);
+		}
+		
 
-		// 	let fields = [{fieldtype: 'Section Break', label: `${section_label}(${carrier}): ${lookup_field}`}];
-		// 	const urls = cargo_management.load_carrier_settings(carrier).urls;
-
-		// 	urls.forEach((url, i) => {
-		// 		fields.push({
-		// 			fieldtype: 'Button', label: url.title, input_class: "btn-block btn-primary",  // FIXME: btn-default
-		// 			click: () => window.open(url.url + lookup_field)
-		// 		});
-
-		// 		if (i < urls.length - 1) {
-		// 			fields.push({fieldtype: 'Column Break'});
-		// 		}
-		// 	});
-
-		// 	return fields;
-		// }
 	},
 
 	// formatters: {
@@ -168,5 +165,3 @@ frappe.listview_settings['Parcel'] = {
 	// 	name: (value, df, doc) => (value !== doc.tracking_number) ? `<b>${value}</b>` : ''
 	// }
 };
-// 119 FIXME: Create more functions, and move them to cargo_management.js
-// 6 warning, 1 typo

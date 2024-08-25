@@ -13,8 +13,10 @@ class WarehouseReceipt(Document):
 		from cargo_management.warehouse_management.doctype.warehouse_receipt_line.warehouse_receipt_line import WarehouseReceiptLine
 		from frappe.types import DF
 
+		agent: DF.Link
 		carrier_est_gross_weight: DF.Float
 		departure_date: DF.Date | None
+		naming_series: DF.Literal["SHIP-WAR-.YYYY.-"]
 		status: DF.Literal["Draft", "Open", "Awaiting Departure", "In Transit", "Sorting", "Finished"]
 		transportation: DF.Literal["", "Sea", "Air"]
 		volumetric_weight: DF.Float
