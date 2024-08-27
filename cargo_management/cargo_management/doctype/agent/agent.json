@@ -559,7 +559,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2024-08-25 23:21:39.059503",
+ "modified": "2024-08-27 20:15:28.968304",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Agent",
@@ -585,6 +585,7 @@
    "read": 1,
    "report": 1,
    "role": "Agent User",
+   "select": 1,
    "share": 1
   },
   {
@@ -594,6 +595,7 @@
    "read": 1,
    "report": 1,
    "role": "Parcel User",
+   "select": 1,
    "share": 1
   },
   {
@@ -604,6 +606,18 @@
    "report": 1,
    "role": "Cargo User",
    "share": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Shipping Manager",
+   "share": 1,
+   "write": 1
   }
  ],
  "quick_entry": 1,

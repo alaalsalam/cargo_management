@@ -27,7 +27,6 @@
   "totals_section",
   "column_break_5tood",
   "company",
-  "carrier",
   "agent",
   "transportation",
   "shipper",
@@ -69,6 +68,7 @@
   "additional_data_from_carrier_section",
   "carrier_est_delivery",
   "carrier_real_delivery",
+  "carrier",
   "column_break_3",
   "carrier_est_weight",
   "signed_by",
@@ -103,16 +103,13 @@
    "unique": 1
   },
   {
-   "allow_in_quick_entry": 1,
    "default": "Unknown",
    "fieldname": "carrier",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
+   "hidden": 1,
    "label": "Carrier",
    "no_copy": 1,
-   "options": "Drop Off\nPick Up\nUnknown\nAmazon\nUSPS\nUPS\nDHL\nFedEx\nOnTrac\nCainiao\nSF Express\nYanwen\nYunExpress\nSunYou\nPitney Bowes\nVeho",
-   "reqd": 1,
-   "search_index": 1
+   "options": "Drop Off\nPick Up\nUnknown\nAmazon\nUSPS\nUPS\nDHL\nFedEx\nOnTrac\nCainiao\nSF Express\nYanwen\nYunExpress\nSunYou\nPitney Bowes\nVeho"
   },
   {
    "bold": 1,
@@ -377,6 +374,7 @@
    "fetch_from": "shipper_name.custom_phone_number",
    "fieldname": "shipper_number",
    "fieldtype": "Data",
+   "in_standard_filter": 1,
    "label": "Shipper Number",
    "read_only": 1
   },
@@ -402,6 +400,8 @@
   {
    "fieldname": "receiver_name",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Receiver Name",
    "options": "Customer"
   },
@@ -592,6 +592,8 @@
   {
    "fieldname": "agent",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Agent",
    "options": "Agent",
    "reqd": 1
@@ -634,7 +636,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-08-23 22:36:52.673888",
+ "modified": "2024-08-27 20:27:40.661726",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

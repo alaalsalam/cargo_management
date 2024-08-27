@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"2cVngv2bY_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Active Parcels\",\"col\":3}},{\"id\":\"moteQqojsu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Arrived Today\",\"col\":3}},{\"id\":\"N4TAMrIe0p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Awaiting Departure\",\"col\":3}},{\"id\":\"FTuRXslsPs\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"D-ZwfjAeWb\",\"type\":\"card\",\"data\":{\"card_name\":\"Parcel\",\"col\":4}},{\"id\":\"HZ7j612Snb\",\"type\":\"card\",\"data\":{\"card_name\":\"Warehouse\",\"col\":4}},{\"id\":\"908tOGGHYg\",\"type\":\"card\",\"data\":{\"card_name\":\"Cargo Shipment\",\"col\":4}},{\"id\":\"mKq3oe2kJ3\",\"type\":\"card\",\"data\":{\"card_name\":\"Selling\",\"col\":4}},{\"id\":\"S94omDcW48\",\"type\":\"card\",\"data\":{\"card_name\":\"Buying\",\"col\":4}},{\"id\":\"oL4nK8JYbg\",\"type\":\"card\",\"data\":{\"card_name\":\"Delivery\",\"col\":4}},{\"id\":\"gjNYox8xjo\",\"type\":\"card\",\"data\":{\"card_name\":\"Agent Mangement\",\"col\":4}}]",
+ "content": "[{\"id\":\"2cVngv2bY_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Active Parcels\",\"col\":3}},{\"id\":\"N4TAMrIe0p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Awaiting Departure\",\"col\":3}},{\"id\":\"FTuRXslsPs\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"D-ZwfjAeWb\",\"type\":\"card\",\"data\":{\"card_name\":\"Parcel\",\"col\":4}},{\"id\":\"HZ7j612Snb\",\"type\":\"card\",\"data\":{\"card_name\":\"Warehouse\",\"col\":4}},{\"id\":\"908tOGGHYg\",\"type\":\"card\",\"data\":{\"card_name\":\"Cargo Shipment\",\"col\":4}},{\"id\":\"mKq3oe2kJ3\",\"type\":\"card\",\"data\":{\"card_name\":\"Selling\",\"col\":4}},{\"id\":\"S94omDcW48\",\"type\":\"card\",\"data\":{\"card_name\":\"Buying\",\"col\":4}},{\"id\":\"oL4nK8JYbg\",\"type\":\"card\",\"data\":{\"card_name\":\"Delivery\",\"col\":4}},{\"id\":\"gjNYox8xjo\",\"type\":\"card\",\"data\":{\"card_name\":\"Agent Mangement\",\"col\":4}}]",
  "creation": "2020-07-05 15:49:07.860880",
  "custom_blocks": [],
  "docstatus": 0,
@@ -246,7 +246,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-08-27 21:27:17.280378",
+ "modified": "2024-08-27 20:39:05.451907",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcels",
@@ -273,15 +273,6 @@
    "label": "Active Parcels",
    "link_to": "Parcel",
    "stats_filter": "{\"status\":[\"not in\",[\"Finished\",\"Cancelled\",\"Never Arrived\",\"Returned to Sender\"]]}",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "format": "{} Delivered",
-   "label": "Arrived Today",
-   "link_to": "Parcel",
-   "stats_filter": "{\"carrier_real_delivery\":[\"Timespan\",\"today\"]}",
    "type": "DocType"
   }
  ],
