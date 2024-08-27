@@ -5,3 +5,4 @@ Shipment Management
 Support Customization
 Warehouse Management
 Support Management
+Cargo Management

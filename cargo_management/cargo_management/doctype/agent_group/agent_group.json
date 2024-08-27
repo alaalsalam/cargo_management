@@ -24,6 +24,17 @@
  ],
  "fields": [
   {
+   "fieldname": "agent_group_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Agent Group Name",
+   "no_copy": 1,
+   "oldfieldname": "customer_group_name",
+   "oldfieldtype": "Data",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
    "bold": 1,
    "fieldname": "parent_customer_group",
    "fieldtype": "Link",
@@ -122,25 +133,14 @@
    "fieldtype": "Table",
    "label": "Credit Limit",
    "options": "Customer Credit Limit"
-  },
-  {
-   "fieldname": "agent_group_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Agent Group Name",
-   "no_copy": 1,
-   "oldfieldname": "customer_group_name",
-   "oldfieldtype": "Data",
-   "reqd": 1,
-   "unique": 1
   }
  ],
  "icon": "fa fa-sitemap",
  "is_tree": 1,
  "links": [],
- "modified": "2024-08-21 15:47:28.480805",
+ "modified": "2024-08-25 22:20:49.412534",
  "modified_by": "Administrator",
- "module": "Shipment Management",
+ "module": "Cargo Management",
  "name": "Agent Group",
  "naming_rule": "By fieldname",
  "nsm_parent_field": "parent_customer_group",

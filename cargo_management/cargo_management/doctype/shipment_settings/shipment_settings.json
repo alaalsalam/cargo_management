@@ -89,9 +89,9 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-08-25 22:26:47.183335",
+ "modified": "2024-08-25 22:26:09.837147",
  "modified_by": "Administrator",
- "module": "Shipment Management",
+ "module": "Cargo Management",
  "name": "Shipment Settings",
  "owner": "Administrator",
  "permissions": [

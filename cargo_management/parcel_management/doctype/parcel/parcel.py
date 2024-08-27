@@ -205,20 +205,21 @@ class Parcel(Document):
 			case Status.AWAITING_DEPARTURE:
 				# TODO: Add Warehouse Receipt date, # TODO: Add cargo shipment calendar
 				# cargo_shipment = frappe.get_cached_doc('Cargo Shipment', self.cargo_shipment)
-
+    
 				# TODO: What if we dont have real delivery date. Or signature
-				message = [
-					StatusMessage.TRANSPORTER_DELIVERY_DATE.value.replace(
-						'[DATE]',
-						frappe.utils.format_datetime(self.carrier_real_delivery, 'medium')
-					),
+				if self.carrier_real_delivery:
+					message = [
+						StatusMessage.TRANSPORTER_DELIVERY_DATE.value.replace(
+							'[DATE]',
+							frappe.utils.format_datetime(self.carrier_real_delivery, 'medium')
+						),
+					]
+				if self.signed_by:
+					message.append(StatusMessage.SIGNED_BY.value.replace('[SIGNER]', str(self.signed_by)))
 					# 'Firmado por {}'.format(self.carrier_real_delivery, self.signed_by),
 					# 'Fecha esperada de recepcion en Managua: {}'.format(cargo_shipment.expected_arrival_date),
 
-					# 'Embarque: {}'.format(self.cargo_shipment)
-				]
-				if self.signed_by:
-					message.append(StatusMessage.SIGNED_BY.value.replace('[SIGNER]', str(self.signed_by)))
+				message.append('Embarque: {}'.format(self.cargo_shipment))
 
 			case Status.IN_TRANSIT:
 				# TODO: Add Departure date and est arrival date

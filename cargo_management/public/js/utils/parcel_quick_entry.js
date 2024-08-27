@@ -6,6 +6,7 @@ frappe.ui.form.ParcelQuickEntryForm = class ParcelQuickEntryForm extends frappe.
 	}
 
 	render_dialog() {
+		// TODO: Convert to this.dialog fields_dict
 		// FIXME: Look For a Place to Override Parcel Form Control
 		frappe.meta.docfield_map['Parcel']['transportation'].fieldtype = 'TransportationMultiCheck';
 

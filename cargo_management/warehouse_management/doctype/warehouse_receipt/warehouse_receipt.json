@@ -140,7 +140,7 @@
   }
  ],
  "links": [],
- "modified": "2024-08-23 20:04:05.108486",
+ "modified": "2024-08-25 22:38:07.195568",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt",
@@ -200,7 +200,6 @@
    "read": 1,
    "report": 1,
    "role": "Agent User",
-   "select": 1,
    "share": 1,
    "write": 1
   },
@@ -211,9 +210,16 @@
    "read": 1,
    "report": 1,
    "role": "Cargo User",
-   "select": 1,
-   "share": 1,
-   "write": 1
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Parcel User",
+   "share": 1
   }
  ],
  "show_name_in_global_search": 1,

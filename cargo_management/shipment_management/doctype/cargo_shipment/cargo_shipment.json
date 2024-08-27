@@ -281,7 +281,7 @@
    "link_fieldname": "custom_cargo_shipment"
   }
  ],
- "modified": "2024-08-23 22:30:00.713143",
+ "modified": "2024-08-25 22:37:07.930455",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Cargo Shipment",
@@ -342,6 +342,24 @@
    "role": "Cargo User",
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Parcel User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent User",
+   "share": 1
   }
  ],
  "show_name_in_global_search": 1,
