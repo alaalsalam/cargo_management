@@ -34,7 +34,7 @@ frappe.ui.form.on('Parcel', {
 			frm.page.indicator.next().remove(); // Remove the extra indicator if the indicator changes
 		});
 
-		// observer.observe(frm.page.indicator.get(0), {childList: true}); // Observe the 'indicator' for changes
+		observer.observe(frm.page.indicator.get(0), {childList: true}); // Observe the 'indicator' for changes
 
 		// Setting custom queries
 		frm.set_query('item_code', 'content', () => {
