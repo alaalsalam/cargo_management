@@ -32,7 +32,7 @@ class CargoShipment(Document):
         scan_barcode: DF.Data | None
         shipping_amount: DF.Currency
         status: DF.Literal["Awaiting Departure", "In Transit", "Sorting", "Finished"]
-        supplier: DF.Link | None
+        supplier: DF.Link
         total: DF.Currency
         total_actual_weight: DF.Float
         total_qty: DF.Int
@@ -159,6 +159,9 @@ def create_purchase_invoice(doc, rows):
     
     if not rows:
         return
+    
+    auto_create_invoice = frappe.db.get_single_value("Shipment Settings", "create_invoice")
+    auto_submit_invoice = frappe.db.get_single_value("Shipment Settings", "is_submit")
 
     items = []
     item_row_per = []
@@ -184,18 +187,32 @@ def create_purchase_invoice(doc, rows):
         "items": items,
     })
 
-    frappe.flags.ignore_account_permission = True
-    invoice.set_taxes()
-    invoice.set_missing_values()
-    invoice.flags.ignore_mandatory = True
-    invoice.calculate_taxes_and_totals()
-    invoice.insert(ignore_permissions=True)
+    if auto_create_invoice:
 
-    for item in doc.cargo_shipment_lines:
-        if item.name in [i["name"] for i in rows]:
-            item.invoice = invoice.name
-    doc.save()
+        frappe.flags.ignore_account_permission = True
+        invoice.set_taxes()
+        invoice.set_missing_values()
+        invoice.flags.ignore_mandatory = True
+        invoice.calculate_taxes_and_totals()
+        invoice.insert(ignore_permissions=True)
 
-    frappe.msgprint(_("Sales Purchase {0} Created").format(invoice.name), alert=True)
-    return invoice
 
+        if auto_submit_invoice:
+                    invoice.submit()
+
+        for item in doc.cargo_shipment_lines:
+            if item.name in [i["name"] for i in rows]:
+                item.invoice = invoice.name
+                
+        doc.save()
+        frappe.msgprint(_("Sales Purchase {0} Created").format(invoice.name), alert=True)
+        return invoice
+        # for item in doc.cargo_shipment_lines:
+        #     if item.name in [i["name"] for i in rows]:
+        #         item.invoice = invoice.name
+        # doc.save()
+
+        # frappe.msgprint(_("Sales Purchase {0} Created").format(invoice.name), alert=True)
+        # return invoice
+    else:
+        return invoice

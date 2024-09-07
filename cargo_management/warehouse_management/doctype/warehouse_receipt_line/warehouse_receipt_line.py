@@ -19,6 +19,7 @@ class WarehouseReceiptLine(Document):
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
+		shipping_amount: DF.Currency
 		type: DF.Literal["", "Box", "Envelope", "Pallet", "Mail"]
 		volumetric_weight: DF.Float
 		warehouse_est_weight: DF.Float

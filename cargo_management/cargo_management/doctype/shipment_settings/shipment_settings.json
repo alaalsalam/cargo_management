@@ -12,12 +12,18 @@
   "sales_item_group",
   "fuel_item_group",
   "fuel_item",
+  "default_commission_rate",
   "column_break_rcaxa",
   "expense_account_group",
   "cash_or_bank_account_group",
   "barcode_type",
+  "create_invoice",
+  "is_submit",
   "accounting_dimension_section",
-  "accounting_dimension"
+  "accounting_dimension",
+  "default_accounts_section",
+  "accounts",
+  "advance_accounts"
  ],
  "fields": [
   {
@@ -84,12 +90,47 @@
    "fieldname": "accounting_dimension",
    "fieldtype": "Table",
    "options": "Transport Accounting Dimension"
+  },
+  {
+   "fieldname": "create_invoice",
+   "fieldtype": "Select",
+   "label": "Create Invoice",
+   "options": "Manually\nAutomatically"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.create_invoice == \"Automatically\"",
+   "fieldname": "is_submit",
+   "fieldtype": "Check",
+   "label": "Is Submit"
+  },
+  {
+   "fieldname": "default_accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Default Accounts"
+  },
+  {
+   "fieldname": "accounts",
+   "fieldtype": "Table",
+   "label": "Accounts",
+   "options": "Party Account"
+  },
+  {
+   "fieldname": "default_commission_rate",
+   "fieldtype": "Float",
+   "label": "Default Commission Rate(%)"
+  },
+  {
+   "fieldname": "advance_accounts",
+   "fieldtype": "Table",
+   "label": "Advance Accounts ",
+   "options": "Party Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-08-25 22:26:09.837147",
+ "modified": "2024-09-07 01:32:39.676529",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Shipment Settings",

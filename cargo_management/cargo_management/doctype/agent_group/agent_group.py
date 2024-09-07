@@ -18,6 +18,7 @@ class AgentGroup(NestedSet):
 
 		accounts: DF.Table[PartyAccount]
 		agent_group_name: DF.Data
+		commission_rate: DF.Float
 		credit_limits: DF.Table[CustomerCreditLimit]
 		default_price_list: DF.Link | None
 		is_group: DF.Check

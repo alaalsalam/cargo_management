@@ -84,7 +84,11 @@
   "column_break_heai",
   "warehouse_receipt",
   "easypost_id",
-  "amended_from"
+  "amended_from",
+  "more_info_tab",
+  "accounts_details_section",
+  "agent_account",
+  "debit_to"
  ],
  "fields": [
   {
@@ -225,8 +229,7 @@
    "fieldname": "total",
    "fieldtype": "Currency",
    "label": "Total",
-   "options": "USD",
-   "read_only": 1
+   "options": "USD"
   },
   {
    "description": "Required to fetch data after an easypost tracking number is created",
@@ -607,8 +610,33 @@
   {
    "fieldname": "column_break_benm",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Info"
+  },
+  {
+   "fieldname": "accounts_details_section",
+   "fieldtype": "Section Break",
+   "label": "Accounts Details"
+  },
+  {
+   "fieldname": "debit_to",
+   "fieldtype": "Link",
+   "label": "Debit To",
+   "options": "Account",
+   "reqd": 1
+  },
+  {
+   "fieldname": "agent_account",
+   "fieldtype": "Link",
+   "label": "Agent Account",
+   "options": "Account",
+   "reqd": 1
   }
  ],
+ "is_submittable": 1,
  "links": [
   {
    "group": "Warehouse",
@@ -636,7 +664,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-08-27 20:27:40.661726",
+ "modified": "2024-09-07 02:45:56.898252",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

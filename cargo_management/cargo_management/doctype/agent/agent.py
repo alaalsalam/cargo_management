@@ -42,6 +42,7 @@ class Agent(TransactionBase):
 		agent_group: DF.Link | None
 		agent_name: DF.Data
 		agent_type: DF.Literal["Company", "Individual", "Proprietorship", "Partnership"]
+		commission_rate: DF.Float
 		companies: DF.Table[AllowedToTransactWith]
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_pos_id: DF.Data | None

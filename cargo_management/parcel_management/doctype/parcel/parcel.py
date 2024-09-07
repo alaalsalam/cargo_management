@@ -12,8 +12,10 @@ import json
 
 import random
 import string
+from erpnext.controllers.accounts_controller import AccountsController
+from erpnext.accounts.party import get_due_date, get_party_account, get_party_details
 
-class Parcel(Document):
+class Parcel(AccountsController):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -24,6 +26,7 @@ class Parcel(Document):
 		from frappe.types import DF
 
 		agent: DF.Link
+		agent_account: DF.Link
 		amended_from: DF.Link | None
 		barcode: DF.Barcode | None
 		cargo_shipment: DF.Link | None
@@ -37,6 +40,7 @@ class Parcel(Document):
 		company: DF.Link
 		content: DF.Table[ParcelContent]
 		currency: DF.Link | None
+		debit_to: DF.Link
 		destination: DF.Data | None
 		easypost_id: DF.Data | None
 		est_delivery_1: DF.Date | None
@@ -124,13 +128,22 @@ class Parcel(Document):
 		for tracking in self.content:
 			tracking.tracking_number = str(self.tracking_number) + "-" + str(tracking.idx)
 			
-	def before_save(self):
-		""" Before saved in DB and after validated. Add new data. This runs on Insert(Create) or Save(Update)"""
+	# def before_save(self):
+	# 	auto_create_invoice = frappe.db.get_single_value("Shipment Settings", "create_invoice")
 
-		if self.is_new():
-			self.get_generated_barcode()
-		elif self.has_value_changed('shipper') or self.has_value_changed('tracking_number'):  # Exists and data has changed
-			frappe.msgprint("Shipper or Tracking Number has changed, we have requested new data.", indicator='yellow', alert=True)
+	# 	if auto_create_invoice== "Automatically":
+	# 		# الحصول على جميع الصفوف التي لم تُصدر لها فاتورة بعد
+	# 		rows = [row for row in self.content if not row.get("invoice")]
+
+	# 		if rows:
+	# 			# استدعاء الدالة لإنشاء الفاتورة
+	# 			create_sales_invoice(self, json.dumps(rows))
+	# 	""" Before saved in DB and after validated. Add new data. This runs on Insert(Create) or Save(Update)"""
+
+	# 	if self.is_new():
+	# 		self.get_generated_barcode()
+	# 	elif self.has_value_changed('shipper') or self.has_value_changed('tracking_number'):  # Exists and data has changed
+	# 		frappe.msgprint("Shipper or Tracking Number has changed, we have requested new data.", indicator='yellow', alert=True)
 
 	def change_status(self, new_status):
 		"""
@@ -162,9 +175,9 @@ class Parcel(Document):
 		"""
 		Fetch the barcode type from the Shipment Settings doctype and generate a barcode based on the type.
 		"""
-		shipment_settings = frappe.get_doc("Shipment Settings")
-		barcode_type = shipment_settings.barcode_type
-		self.barcode = generate_barcode(barcode_type)
+		shipment_settings = frappe.db.get_single_value("Shipment Settings", "barcode_type")
+		# barcode_type = shipment_settings.barcode_type
+		self.barcode = generate_barcode(shipment_settings)
 
 	@property
 	def explained_status(self):
@@ -265,6 +278,123 @@ class Parcel(Document):
 		return {'message': message, 'color': color}
 
 
+	def validate(self):
+		self.validate_debit_to_acc()
+
+
+	def on_submit(self):
+		self.make_gl_entries()
+
+	@frappe.whitelist()
+	def calculate_total_amount(doc):
+		total_amount = sum(row.get("shipping_amount", 0) for row in doc.get("warehouse_receipt_lines", []))
+		# frappe.msgprint(f"Total Amount: {total_amount}")
+		return total_amount
+
+
+
+	def make_gl_entries(self, gl_entries=None, from_repost=False):
+		from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
+		if not gl_entries:
+			gl_entries = self.get_gl_entries()
+
+		if gl_entries:
+
+			if self.docstatus == 1:
+				make_gl_entries(
+					gl_entries,
+					merge_entries=False,
+					from_repost=from_repost,
+				)
+		
+			# from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
+
+			# update_outstanding_amt(
+			# 	self.debit_to,
+			# 	"Customer",
+			# 	self.customer,
+			# 	self.doctype,
+			# 	self.return_against if cint(self.is_return) and self.return_against else self.name,
+			# )
+
+
+ 
+	def get_gl_entries(self, warehouse_account=None):
+		from erpnext.accounts.general_ledger import merge_similar_entries
+
+		gl_entries = []
+
+		self.make_agent_gl_entry(gl_entries)
+		# self.make_parcel_gl_entries(gl_entries)
+
+
+		return gl_entries
+
+	def make_agent_gl_entry(self, gl_entries):
+		gl_entries.append(
+				self.get_gl_dict(
+					{
+						"account": self.debit_to,
+						"party_type": "Customer",
+						"party": self.shipper_name,
+						"posting_date": self.order_date,
+						"against": self.agent_account,
+						"debit": self.total,
+						"debit_in_account_currency": self.total
+						# if self.party_account_currency == self.company_currency
+						# else grand_total,
+						# "against_voucher": against_voucher,
+						# "against_voucher_type": self.doctype,
+						# "cost_center": self.cost_center,
+						# "project": self.project,
+					},
+					# self.party_account_currency,
+					item=self,
+				)
+			)
+		gl_entries.append(
+			self.get_gl_dict(
+				{
+					"account": self.agent_account,
+					"posting_date": self.order_date,
+					"against": self.debit_to,
+					"credit": self.total,
+					"credit_in_account_currency": self.total,
+					# "against_voucher": self.name,
+					# "against_voucher_type": self.doctype,
+					# "cost_center": self.cost_center,
+					# "project": self.project,
+				},
+				item=self,
+			)
+		)
+
+	# def make_parcel_gl_entries(self, gl_entries):
+	# 	for item in self.get("warehouse_receipt_lines"):
+	# 		if item.shipping_amount:
+	# 			if self.commission_rate:
+	# 				commission_amount = item.shipping_amount * (self.commission_rate / 100)
+	# 				shipping_amount_after_commission = item.shipping_amount - commission_amount
+	# 			else:
+	# 				# إذا لم توجد نسبة العمولة، استخدم قيمة الشحن كما هي
+	# 				shipping_amount_after_commission = item.shipping_amount
+
+	# 			income_account = self.paid_to
+	# 			account_currency = get_account_currency(income_account)
+	# 			gl_entries.append(
+	# 				self.get_gl_dict(
+	# 					{
+	# 						"account": income_account,
+	# 						"against": self.agent,
+	# 						"credit": flt(shipping_amount_after_commission, item.precision("shipping_amount")),
+	# 						"credit_in_account_currency": flt(shipping_amount_after_commission, item.precision("shipping_amount")),
+	# 						"parcel": item.parcel,
+	# 					},
+	# 					account_currency,
+	# 					item=item,
+	# 				)
+	# 			)
+
 
 	# def update_from_api_data(self, api_data: dict) -> None:
 	# 	""" This updates the parcel with the data from the API. """
@@ -312,57 +442,105 @@ class Parcel(Document):
 
 		return message, color
 
+	def validate_debit_to_acc(self):
+			if not self.debit_to:
+				self.debit_to = get_party_account("Customer", self.shipper_name, self.company)
+				if not self.debit_to:
+					self.raise_missing_debit_credit_account_error("Customer", self.shipper_name)
+
+			account = frappe.get_cached_value(
+				"Account", self.debit_to, ["account_type", "report_type", "account_currency"], as_dict=True
+			)
+
+			if not account:
+				frappe.throw(_("Debit To is required"), title=_("Account Missing"))
+
+@frappe.whitelist()
+def get_account_for_customer(agent, company, docname=None):
+    agent_doc = frappe.get_doc("Customer", agent)
+    
+    for row in agent_doc.accounts:
+        if row.company == company:
+            return row.account
+    if agent_doc.customer_group:
+        agent_group_doc = frappe.get_doc("Customer Group", agent_doc.customer_group)
+        
+        for row in agent_group_doc.accounts:
+            if row.company == company:
+                return row.account
+    
+    settings_doc = frappe.get_single("Shipment Settings")  
+    if settings_doc:
+        for row in settings_doc.accounts: 
+            if row.company == company:
+                return row.account
+    
+    frappe.msgprint(_("No account found for the selected company, agent, or agent group. Please choose one."))
+    return None
+
+
+
+@frappe.whitelist()
+def get_create_invoice_setting():
+    return frappe.db.get_single_value("Shipment Settings", "create_invoice")
+
 
 @frappe.whitelist()
 def create_sales_invoice(doc, rows):
-		doc = frappe.get_doc(json.loads(doc))
-		rows = json.loads(rows)
-		
-		if not rows:
-			return
-		# if not doc.currency:
-		# 		doc.currency = frappe.defaults.get_user_default("currency")  # Set default currency if not provided
-
-		items = []
-		item_row_per = []
-
-		for row in rows:
-			item = frappe._dict({
-				"item_code": row["item_code"],
-				"qty": 1,
-				"uom": frappe.get_value("Item", row["item_code"], "stock_uom"),
-				"package": doc.get("name"),
-				"rate": row["rate"],
-				"description": row["description"],
-			})
-			item_row_per.append([row, item])
-			items.append(item)
-		
-		invoice = frappe.get_doc({
-			"doctype": "Sales Invoice",
-			"customer": doc.shipper_name,
-			"currency": doc.currency,
-			"posting_date": nowdate(),
-			"company": doc.company,
-			"items": items,
-		})
-
-		frappe.flags.ignore_account_permission = True
-		invoice.set_taxes()
-		invoice.set_missing_values()
-		invoice.flags.ignore_mandatory = True
-		invoice.calculate_taxes_and_totals()
-		invoice.insert(ignore_permissions=True)
-
-		for item in doc.content:
-			if item.name in [i["name"] for i in rows]:
-				item.invoice = invoice.name
+    doc = frappe.get_doc(json.loads(doc))
+    rows = json.loads(rows)
     
-		doc.save()
+    if not rows:
+        return
 
-		frappe.msgprint(_("Sales Invoice {0} Created").format(invoice.name), alert=True)
-		return invoice
+    auto_create_invoice = frappe.db.get_single_value("Shipment Settings", "create_invoice")
+    auto_submit_invoice = frappe.db.get_single_value("Shipment Settings", "is_submit")
 
+    items = []
+    item_row_per = []
+
+    for row in rows:
+        item = frappe._dict({
+            "item_code": row["item_code"],
+            "qty": 1,
+            "uom": frappe.get_value("Item", row["item_code"], "stock_uom"),
+            "package": doc.get("name"),
+            "rate": row["rate"],
+            "description": row["description"],
+        })
+        item_row_per.append([row, item])
+        items.append(item)
+    
+    invoice = frappe.get_doc({
+        "doctype": "Sales Invoice",
+        "customer": doc.shipper_name,
+        "currency": doc.currency,
+        "posting_date": nowdate(),
+        "company": doc.company,
+        "items": items,
+    })
+
+    if auto_create_invoice:
+        # إنشاء الفاتورة تلقائيًا
+        frappe.flags.ignore_account_permission = True
+        invoice.set_taxes()
+        invoice.set_missing_values()
+        invoice.flags.ignore_mandatory = True
+        invoice.calculate_taxes_and_totals()
+        invoice.insert(ignore_permissions=True)
+        
+        if auto_submit_invoice:
+            invoice.submit()
+
+        for item in doc.content:
+            if item.name in [i["name"] for i in rows]:
+                item.invoice = invoice.name
+        
+        doc.save()
+        frappe.msgprint(_("Sales Invoice {0} Created").format(invoice.name), alert=True)
+        return invoice
+    else:
+        return invoice
 
 # -------------------------------------------------------------------------
 def generate_barcode(barcode_type):

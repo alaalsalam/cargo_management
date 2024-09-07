@@ -11,6 +11,7 @@
   "agent_group_name",
   "parent_customer_group",
   "is_group",
+  "commission_rate",
   "cb0",
   "default_price_list",
   "payment_terms",
@@ -133,12 +134,17 @@
    "fieldtype": "Table",
    "label": "Credit Limit",
    "options": "Customer Credit Limit"
+  },
+  {
+   "fieldname": "commission_rate",
+   "fieldtype": "Float",
+   "label": "Commission Rate (%)"
   }
  ],
  "icon": "fa fa-sitemap",
  "is_tree": 1,
  "links": [],
- "modified": "2024-08-25 22:20:49.412534",
+ "modified": "2024-09-06 02:31:58.301820",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Agent Group",

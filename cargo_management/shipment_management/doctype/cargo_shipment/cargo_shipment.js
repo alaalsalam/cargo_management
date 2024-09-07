@@ -22,6 +22,40 @@ frappe.ui.form.on('Cargo Shipment', {
 			frappe.msgprint(__("All Rows are Invoiced or No Rows Available!"));
 		}
 	},
+	after_save(frm) {
+        // استدعاء دالة بايثون للحصول على إعدادات "create_invoice"
+        frappe.call({
+            method: 'cargo_management.parcel_management.doctype.parcel.parcel.get_create_invoice_setting',  
+            callback: function(r) {
+                let auto_create_invoice = r.message;
+                
+                if (auto_create_invoice === "Automatically") {
+					console.log(auto_create_invoice);
+                    // تحديد الصفوف غير المفوترة
+					let rows = frm.doc.cargo_shipment_lines.filter(i => !i.invoice); 
+					if (rows.length) {
+                        // استدعاء دالة لإنشاء الفاتورة
+                        frappe.call({
+                            method: "cargo_management.shipment_management.doctype.cargo_shipment.cargo_shipment.create_purchase_invoice",
+                            args: {
+                                doc: frm.doc,
+                                rows: rows
+                            },
+                            callback: function(data) {
+								frappe.set_route('Form', data.message.doctype, data.message.name);
+                            },
+                            error: function(err) {
+                                console.error(__('Error: {0}').format(err.responseText));
+                            }
+                        });
+                    }
+                }
+            },
+            error: function(err) {
+                console.error(__('Error: {0}').format(err.responseText));
+            }
+        });
+    },
 	scan_barcode: function(frm) {
 		if (!frm.doc.scan_barcode) {
 			console.warn('No barcode entered.');
@@ -73,7 +107,7 @@ frappe.ui.form.on('Cargo Shipment', {
 		// Only packages on Warehouse Receipt
 		frm.set_query('package', 'cargo_shipment_lines', () => {
 		    return {
-		        filters: {status: 'Awaiting Departure'}
+		        filters: {status: 'Awaiting Departure',transportation : frm.doc.transportation}
 		    }
 		});
 		frm.set_df_property('expected_arrival_date', 'reqd', true);
@@ -128,6 +162,15 @@ frappe.ui.form.on('Cargo Shipment', {
 				}
 			}
 		});
+
+		frappe.call({
+            method: 'cargo_management.parcel_management.doctype.parcel.parcel.get_create_invoice_setting',
+            callback: function(r) {
+                let auto_create_invoice = r.message;
+                
+                if (auto_create_invoice === "Automatically") {
+					frm.fields_dict['create_invoice'].wrapper.style.display = 'none';
+				}}});
 	},
 
 	validate: function (frm) {
@@ -178,17 +221,33 @@ frappe.ui.form.on('Cargo Shipment Warehouse', {
 	}
 });
 
-// frappe.ui.form.on('Cargo Shipment Line', {
-//     cargo_shipment_lines_add: function(frm, cdt, cdn) {
-//         console.log("Row Added");
+frappe.ui.form.on('Cargo Shipment Line', {
+    cargo_shipment_lines_add: function(frm, cdt, cdn) {
+    //     console.log("Row Added");
 
-//         // Get the newly added row
-//         let row = locals[cdt][cdn];
+    //     // Get the newly added row
+    //     let row = locals[cdt][cdn];
 
-//         // Set the 'id' field to the document's name
-//         row.parcel_id = frm.doc.name;
+    //     // Set the 'id' field to the document's name
+    //     row.parcel_id = frm.doc.name;
 
-//         // Refresh the field to ensure it displays correctly
-//         frm.refresh_field('cargo_shipment_lines');
-//     }
-// });
+    //     // Refresh the field to ensure it displays correctly
+    //     frm.refresh_field('cargo_shipment_lines');
+    // },
+        frappe.call({
+            method: 'frappe.client.get_value',
+            args: {
+                doctype: 'Shipment Settings',
+                fieldname: 'fuel_item'
+            },
+            callback: function(r) {
+                if(r.message) {
+                     console.log(r.message)
+					let row = frappe.get_doc(cdt, cdn);
+                    row.item = r.message.fuel_item;
+                    frm.refresh_field('cargo_shipment_lines');  
+                }
+            }
+        });
+    },
+});

@@ -11,19 +11,48 @@
  "field_order": [
   "departure_date",
   "naming_series",
+  "company",
+  "mode_of_payment",
+  "posting_date",
   "column_break_3",
   "transportation_multicheck_html",
   "agent",
   "transportation",
   "status",
+  "section_break_uocp",
+  "column_break_zmyj",
+  "paid_to",
+  "paid_to_account_currency",
+  "paid_to_account_balance",
+  "column_break_vhrc",
+  "party_balance",
+  "agent_account",
+  "paid_from_account_currency",
+  "paid_from_account_balance",
   "sb_0",
   "warehouse_receipt_lines",
+  "description",
+  "commission_section",
+  "commission_rate",
+  "column_break_bczf",
+  "total_commission",
+  "section_break_zfqj",
+  "column_break_sckr",
+  "total_shipment_amount",
+  "source_exchange_rate",
+  "column_break_xwib",
+  "received_amount",
+  "target_exchange_rate",
   "section_totals",
   "warehouse_est_gross_weight",
+  "total_shipping_price",
+  "paid_amount",
+  "cost_center",
   "column_break_16",
   "volumetric_weight",
   "column_break_14",
-  "carrier_est_gross_weight"
+  "carrier_est_gross_weight",
+  "amended_from"
  ],
  "fields": [
   {
@@ -43,7 +72,6 @@
    "in_standard_filter": 1,
    "label": "Transportation",
    "options": "\nSea\nAir",
-   "reqd": 1,
    "search_index": 1
   },
   {
@@ -137,10 +165,179 @@
    "label": "Agent",
    "options": "Agent",
    "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "paid_to",
+   "fieldtype": "Link",
+   "label": "Account Paid To",
+   "options": "Account"
+  },
+  {
+   "fieldname": "section_break_uocp",
+   "fieldtype": "Section Break",
+   "label": "Accounts"
+  },
+  {
+   "fieldname": "column_break_zmyj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "label": "Mode of Payment",
+   "options": "Mode of Payment"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Warehouse Receipt",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "agent_account",
+   "fieldtype": "Link",
+   "label": "Agent Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_zfqj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_xwib",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "paid_from_account_currency",
+   "fieldtype": "Link",
+   "label": "Account Currency (Agent)",
+   "options": "Currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "paid_to_account_currency",
+   "fieldtype": "Link",
+   "label": "Account Currency (To)",
+   "options": "Currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sckr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "agent_account",
+   "fieldname": "paid_from_account_balance",
+   "fieldtype": "Currency",
+   "label": "Account Balance (Agent)",
+   "read_only": 1
+  },
+  {
+   "depends_on": "paid_to",
+   "fieldname": "paid_to_account_balance",
+   "fieldtype": "Currency",
+   "label": "Account Balance (To)",
+   "options": "paid_to_account_currency",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount",
+   "options": "paid_to_account_currency"
+  },
+  {
+   "fieldname": "source_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Source Exchange Rate"
+  },
+  {
+   "fieldname": "target_exchange_rate",
+   "fieldtype": "Float",
+   "label": "Target Exchange Rate"
+  },
+  {
+   "depends_on": "agent",
+   "fieldname": "party_balance",
+   "fieldtype": "Currency",
+   "label": "Agent Balance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_shipping_price",
+   "fieldtype": "Float",
+   "label": "Total shipping price"
+  },
+  {
+   "fieldname": "column_break_vhrc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_shipment_amount",
+   "fieldtype": "Currency",
+   "label": "Total Shipment Amount"
+  },
+  {
+   "fieldname": "paid_amount",
+   "fieldtype": "Float",
+   "label": "paid_amount"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "commission_section",
+   "fieldtype": "Section Break",
+   "label": "Commission"
+  },
+  {
+   "fieldname": "column_break_bczf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_commission",
+   "fieldtype": "Currency",
+   "label": "Total Commission"
+  },
+  {
+   "fieldname": "commission_rate",
+   "fieldtype": "Float",
+   "label": "Commission Rate (%)"
   }
  ],
+ "is_submittable": 1,
  "links": [],
- "modified": "2024-08-27 22:16:00.406602",
+ "modified": "2024-09-05 23:26:08.620326",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt",

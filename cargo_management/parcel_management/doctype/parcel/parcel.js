@@ -22,6 +22,39 @@ frappe.ui.form.on('Parcel', {
 			frappe.msgprint(__("All Rows are Invoiced or No Rows Available!"));
 		}
 	},
+	after_save(frm) {
+        // استدعاء دالة بايثون للحصول على إعدادات "create_invoice"
+        frappe.call({
+            method: 'cargo_management.parcel_management.doctype.parcel.parcel.get_create_invoice_setting',  // مسار دالة بايثون
+            callback: function(r) {
+                let auto_create_invoice = r.message;
+                
+                if (auto_create_invoice === "Automatically") {
+                    // تحديد الصفوف غير المفوترة
+					let rows = frm.doc.content.filter(i => !i.invoice);  // استخدام كل الصفوف التي لم تصدر فاتورة لها
+					if (rows.length) {
+                        // استدعاء دالة لإنشاء الفاتورة
+                        frappe.call({
+                            method: "cargo_management.parcel_management.doctype.parcel.parcel.create_sales_invoice",
+                            args: {
+                                doc: frm.doc,
+                                rows: rows
+                            },
+                            callback: function(data) {
+								frappe.set_route('Form', data.message.doctype, data.message.name);
+                            },
+                            error: function(err) {
+                                console.error(__('Error: {0}').format(err.responseText));
+                            }
+                        });
+                    }
+                }
+            },
+            error: function(err) {
+                console.error(__('Error: {0}').format(err.responseText));
+            }
+        });
+    },
 	setup(frm) {
 	},
 
@@ -59,6 +92,14 @@ frappe.ui.form.on('Parcel', {
 
 		frm.page.indicator.parent().append(cargo_management.transportation_indicator(frm.doc.transportation)); // Add Extra Indicator
 
+		frappe.call({
+            method: 'cargo_management.parcel_management.doctype.parcel.parcel.get_create_invoice_setting',  // مسار دالة بايثون
+            callback: function(r) {
+                let auto_create_invoice = r.message;
+                
+                if (auto_create_invoice === "Automatically") {
+					frm.fields_dict['create_invoice'].wrapper.style.display = 'none';
+				}}});
 		// frm.events.show_explained_status(frm); // Show 'Explained Status' as Intro Message
 		// frm.events.build_custom_actions(frm);  // Adding custom buttons
 		
@@ -163,7 +204,87 @@ frappe.ui.form.on('Parcel', {
 			</div>
 
 		</div>`);
+
 	},
+	refresh: function(frm) {
+		// Trigger necessary events on form refresh
+		// frm.events.transportation_multi_check(frm);
+		frm.events.show_general_ledger(frm);
+		erpnext.accounts.ledger_preview.show_accounting_ledger_preview(frm);
+	},
+	
+	show_general_ledger: function (frm) {
+		// Ensure the button only shows if the document status is greater than 0 (submitted or cancelled)
+		if (frm.doc.docstatus > 0) {
+			// Add the "Ledger" button
+			frm.add_custom_button(
+				__("Ledger"),
+				function () {
+					frappe.route_options = {
+						voucher_no: frm.doc.name,
+						from_date: frm.doc.order_date,
+						to_date: moment(frm.doc.modified).format("YYYY-MM-DD"),
+						company: frm.doc.company,
+						group_by: "",
+						show_cancelled_entries: frm.doc.docstatus === 2,  // Show cancelled entries if the document is cancelled
+					};
+					frappe.set_route("query-report", "General Ledger");
+				},
+				"fa fa-table"  // Optional icon for the button
+			);
+		}
+	},
+
+	agent :function(frm){
+		if (frm.doc.agent && frm.doc.company) {
+			frappe.call({
+				method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.get_account_for_company',
+				args: {
+					agent: frm.doc.agent,
+					company: frm.doc.company,
+				},
+				callback: function(r) {
+					if (r.message) {
+						frm.set_value('agent_account', r.message);  
+					}
+				}
+			});
+		}
+	},
+	shipper_name : function(frm){
+			if (frm.doc.shipper_name && frm.doc.company) {
+				frappe.call({
+					method: 'cargo_management.parcel_management.doctype.parcel.parcel.get_account_for_customer',
+					args: {
+						agent: frm.doc.shipper_name,
+						company: frm.doc.company,
+					},
+					callback: function(r) {
+						if (r.message) {
+							frm.set_value('debit_to', r.message);  
+						}
+					}
+				});
+			}
+	},
+	// shipper_name : function (frm){
+	// 	erpnext.utils.get_party_details(
+	// 		this.frm,
+	// 		"erpnext.accounts.party.get_party_details",
+	// 		{
+	// 			posting_date: this.frm.doc.order_date,
+	// 			party: this.frm.doc.shipper_name,
+	// 			party_type: "Customer",
+	// 			account: this.frm.doc.debit_to,
+	// 			// price_list: this.frm.doc.selling_price_list,
+	// 			// pos_profile: pos_profile,
+	// 		},
+	// 		// function () {
+	// 		// 	me.apply_pricing_rule();
+	// 		// }
+	// 	);
+	// },
+	
 	//https://github.com/frappe/frappe/pull/12471 and https://github.com/frappe/frappe/pull/14181/files
 	// sales_order_dialog(frm) {
 	// 	const so_dialog = new frappe.ui.form.MultiSelectDialog({
@@ -277,6 +398,7 @@ frappe.ui.form.on('Parcel', {
 });
 
 frappe.ui.form.on('Parcel Content', {
+
 	content_remove(frm) {
 		frm.events.calculate_total(frm);
 	},
@@ -303,4 +425,6 @@ frappe.ui.form.on('Parcel Content', {
 	height(frm, cdt, cdn) {
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
 	},
+
+
 });

@@ -40,6 +40,7 @@
   "language",
   "column_break_45",
   "agent_details",
+  "commission_rate",
   "dashboard_tab",
   "contact_and_address_tab",
   "address_contacts",
@@ -547,6 +548,11 @@
    "fieldtype": "Table",
    "label": "Agent Portal Users",
    "options": "Portal User"
+  },
+  {
+   "fieldname": "commission_rate",
+   "fieldtype": "Float",
+   "label": "Commission Rate (%)"
   }
  ],
  "icon": "fa fa-user",
@@ -559,7 +565,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2024-08-27 22:21:52.973316",
+ "modified": "2024-09-05 23:17:05.652618",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Agent",
