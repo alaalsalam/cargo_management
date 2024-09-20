@@ -25,8 +25,8 @@
   "paid_to_account_currency",
   "paid_to_account_balance",
   "column_break_vhrc",
-  "party_balance",
   "agent_account",
+  "party_balance",
   "paid_from_account_currency",
   "paid_from_account_balance",
   "sb_0",
@@ -46,7 +46,6 @@
   "section_totals",
   "warehouse_est_gross_weight",
   "total_shipping_price",
-  "paid_amount",
   "cost_center",
   "column_break_16",
   "volumetric_weight",
@@ -128,7 +127,8 @@
    "fieldname": "volumetric_weight",
    "fieldtype": "Float",
    "in_preview": 1,
-   "label": "Total Vol. Weight"
+   "label": "Total Vol. Weight",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_14",
@@ -183,7 +183,8 @@
    "fieldname": "paid_to",
    "fieldtype": "Link",
    "label": "Account Paid To",
-   "options": "Account"
+   "options": "Account",
+   "reqd": 1
   },
   {
    "fieldname": "section_break_uocp",
@@ -195,6 +196,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "bold": 1,
    "fieldname": "mode_of_payment",
    "fieldtype": "Link",
    "label": "Mode of Payment",
@@ -214,7 +216,8 @@
    "fieldname": "agent_account",
    "fieldtype": "Link",
    "label": "Agent Account",
-   "options": "Account"
+   "options": "Account",
+   "reqd": 1
   },
   {
    "fieldname": "cost_center",
@@ -298,6 +301,7 @@
   {
    "fieldname": "total_shipping_price",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Total shipping price"
   },
   {
@@ -307,12 +311,8 @@
   {
    "fieldname": "total_shipment_amount",
    "fieldtype": "Currency",
-   "label": "Total Shipment Amount"
-  },
-  {
-   "fieldname": "paid_amount",
-   "fieldtype": "Float",
-   "label": "paid_amount"
+   "label": "Total Shipment Amount",
+   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -337,7 +337,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-05 23:26:08.620326",
+ "modified": "2024-09-10 02:49:48.360487",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt",

@@ -186,17 +186,19 @@
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Rate"
+   "label": "Rate",
+   "reqd": 1
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Amount"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-08-31 20:46:05.299264",
+ "modified": "2024-09-11 21:02:59.745684",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel Content",

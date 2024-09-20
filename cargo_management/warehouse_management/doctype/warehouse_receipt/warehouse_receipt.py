@@ -47,7 +47,7 @@ class WarehouseReceipt(AccountsController):
 		from frappe.types import DF
 
 		agent: DF.Link
-		agent_account: DF.Link | None
+		agent_account: DF.Link
 		amended_from: DF.Link | None
 		carrier_est_gross_weight: DF.Float
 		commission_rate: DF.Float
@@ -57,10 +57,9 @@ class WarehouseReceipt(AccountsController):
 		description: DF.SmallText | None
 		mode_of_payment: DF.Link | None
 		naming_series: DF.Literal["SHIP-WAR-.YYYY.-"]
-		paid_amount: DF.Float
 		paid_from_account_balance: DF.Currency
 		paid_from_account_currency: DF.Link | None
-		paid_to: DF.Link | None
+		paid_to: DF.Link
 		paid_to_account_balance: DF.Currency
 		paid_to_account_currency: DF.Link | None
 		party_balance: DF.Currency
@@ -127,11 +126,11 @@ class WarehouseReceipt(AccountsController):
 
 	
 	
-	@frappe.whitelist()
-	def calculate_total_amount(doc):
-		total_amount = sum(row.get("shipping_amount", 0) for row in doc.get("warehouse_receipt_lines", []))
-		# frappe.msgprint(f"Total Amount: {total_amount}")
-		return total_amount
+	# @frappe.whitelist()
+	# def calculate_total_amount(doc):
+	# 		total_amount = sum(row.get("shipping_amount", 0) for row in doc.get("warehouse_receipt_lines", [])) 
+	# 		return total_amount
+
 
 
 
@@ -291,8 +290,6 @@ def get_account_for_company(agent, company, docname=None):
     frappe.msgprint(_("No account found for the selected company, agent, or agent group. Please choose one."))
     return None
 
-
-
 @frappe.whitelist()
 def get_rate_for_agent(agent):
     agent_doc = frappe.get_doc("Agent", agent)
@@ -320,7 +317,6 @@ def get_account_for_mode_of_payment(agent, company):
     
     frappe.msgprint(_("No account found for the selected company and agent."))
 
-
 @frappe.whitelist()
 def calculate_commission(commission_rate, total):
 		if total is None or commission_rate is None:
@@ -331,9 +327,24 @@ def calculate_commission(commission_rate, total):
 			commission_rate = float(commission_rate)
 		except ValueError:
 			return 0.0
-
-		# Calculate the commission
 		commission = (total * commission_rate) / 100
 		# frappe.msgprint(str(commission))
 
 		return commission
+
+
+@frappe.whitelist()
+def calculate_rate(total, total_commission):
+    if total is None or total_commission is None:
+        return 0.0
+
+    try:
+        total = float(total)
+        total_commission = float(total_commission)
+    except ValueError:
+        return 0.0
+
+    if total == 0:
+        return 0.0
+    commission_rate = (total_commission / total) * 100
+    return commission_rate

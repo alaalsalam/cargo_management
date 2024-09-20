@@ -23,6 +23,7 @@ class ShipmentSettings(Document):
 		advance_accounts: DF.Table[PartyAccount]
 		barcode_type: DF.Literal["", "EAN", "EAN-8", "EAN-12", "UPC-A", "UPC-E", "CODE-39", "GS1", "GTIN", "ISBN", "ISBN-10", "ISBN-13", "ISSN", "JAN", "PZN"]
 		cash_or_bank_account_group: DF.TableMultiSelect[ShippingCashAccountGroup]
+		commission: DF.Literal["From Parcel", "From Warehouse"]
 		create_invoice: DF.Literal["Manually", "Automatically"]
 		default_commission_rate: DF.Float
 		default_sales_item: DF.Link | None

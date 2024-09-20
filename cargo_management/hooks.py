@@ -31,7 +31,27 @@ app_include_js = "cargo_management.bundle.js"
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
-# page_js = {"page" : "public/js/file.js"}
+# page_js = {"page" : "public/js/list_viwe.js"}
+# app_include_js = "public/js/list_viwe.js"
+import frappe
+import frappe
+
+@frappe.whitelist()
+def get_doctypes():
+    doctypes = frappe.get_all('DocType', filters={'issingle': 0, 'istable': 0, 'custom': 0}, fields=['name'])
+    return [doctype['name'] for doctype in doctypes]
+
+@frappe.whitelist()
+def get_non_table_doctypes():
+    doctypes = frappe.get_all('DocType', filters={'issingle': 0,'istable': 0,'custom': 0}, fields=['name'])
+    docs_dics = {}
+    for doctype in doctypes:
+        docs_dics[doctype.name] = "public/js/list_view.js" 
+    # return [doctype['name'] for doctype in doctypes]
+    return docs_dics
+
+doctype_list_js = get_non_table_doctypes()
+# doctype_list_js = {"*" : "public/js/list_view.js"}
 
 # Include js in doctype views: override/extend Standard Form Scripts.
 doctype_js = {

@@ -120,7 +120,8 @@
    "fieldname": "parcel_transportation",
    "fieldtype": "Read Only",
    "in_list_view": 1,
-   "label": "Transportation"
+   "label": "Transportation",
+   "read_only": 1
   },
   {
    "bold": 1,
@@ -150,12 +151,13 @@
    "fetch_from": "parcel.shipping_amount",
    "fieldname": "shipping_amount",
    "fieldtype": "Currency",
-   "label": "Shipping Amount"
+   "label": "Shipping Amount",
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-09-02 04:08:25.188020",
+ "modified": "2024-09-09 21:27:03.119173",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt Line",

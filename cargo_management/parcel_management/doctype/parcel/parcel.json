@@ -88,7 +88,11 @@
   "more_info_tab",
   "accounts_details_section",
   "agent_account",
-  "debit_to"
+  "debit_to",
+  "commission_section",
+  "shipping_account",
+  "commission_rate",
+  "total_commission"
  ],
  "fields": [
   {
@@ -371,7 +375,8 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Shipper Name",
-   "options": "Customer"
+   "options": "Customer",
+   "reqd": 1
   },
   {
    "fetch_from": "shipper_name.custom_phone_number",
@@ -406,7 +411,8 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Receiver Name",
-   "options": "Customer"
+   "options": "Customer",
+   "reqd": 1
   },
   {
    "fetch_from": "receiver_name.custom_phone_number",
@@ -617,6 +623,7 @@
    "label": "More Info"
   },
   {
+   "collapsible": 1,
    "fieldname": "accounts_details_section",
    "fieldtype": "Section Break",
    "label": "Accounts Details"
@@ -625,8 +632,7 @@
    "fieldname": "debit_to",
    "fieldtype": "Link",
    "label": "Debit To",
-   "options": "Account",
-   "reqd": 1
+   "options": "Account"
   },
   {
    "fieldname": "agent_account",
@@ -634,6 +640,28 @@
    "label": "Agent Account",
    "options": "Account",
    "reqd": 1
+  },
+  {
+   "fieldname": "shipping_account",
+   "fieldtype": "Link",
+   "label": "Shipping Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "commission_rate",
+   "fieldtype": "Currency",
+   "label": "Commission Rate"
+  },
+  {
+   "fieldname": "total_commission",
+   "fieldtype": "Currency",
+   "label": "Total Commission"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "commission_section",
+   "fieldtype": "Section Break",
+   "label": "Commission"
   }
  ],
  "is_submittable": 1,
@@ -664,7 +692,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-09-07 02:45:56.898252",
+ "modified": "2024-09-11 20:06:07.189179",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

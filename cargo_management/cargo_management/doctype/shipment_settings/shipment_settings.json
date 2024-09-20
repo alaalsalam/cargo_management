@@ -19,6 +19,7 @@
   "barcode_type",
   "create_invoice",
   "is_submit",
+  "commission",
   "accounting_dimension_section",
   "accounting_dimension",
   "default_accounts_section",
@@ -125,12 +126,19 @@
    "fieldtype": "Table",
    "label": "Advance Accounts ",
    "options": "Party Account"
+  },
+  {
+   "default": "From Warehouse",
+   "fieldname": "commission",
+   "fieldtype": "Select",
+   "label": "Commission",
+   "options": "From Parcel\nFrom Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-09-07 01:32:39.676529",
+ "modified": "2024-09-11 00:36:21.627327",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Shipment Settings",

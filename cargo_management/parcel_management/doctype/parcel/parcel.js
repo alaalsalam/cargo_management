@@ -1,4 +1,42 @@
 frappe.ui.form.on('Parcel', {
+    refresh: function(frm) {
+        frappe.call({
+            method: 'frappe.client.get_value',
+            args: {
+                doctype: 'Shipment Settings',  
+                fieldname: 'commission'        
+            },
+            callback: function(r) {
+                if (r.message && r.message.commission) {
+                    let commission_type = r.message.commission;
+                    
+                    if (commission_type === 'From Warehouse') {
+                        frm.set_df_property('commission_section', 'hidden', 1);
+                    } else {
+                        frm.set_df_property('commission_section', 'hidden', 0);
+                        
+                        frm.collapse_section('commission_section');
+                    }
+                } else {
+                    frm.set_df_property('commission_section', 'hidden', 0);
+                    
+                    frm.collapse_section('commission_section');
+                }
+            }
+        });
+    }
+});
+
+frappe.ui.form.on('Parcel Content', {
+	item_code: function(frm, cdt, cdn) {
+		frm.trigger('calculate_commission');
+	},
+	
+	rate: function(frm, cdt, cdn) {
+		frm.trigger('calculate_commission');
+	}
+});
+frappe.ui.form.on('Parcel', {
 
 	create_invoice(frm) {
 		if (frm.is_dirty()) {
@@ -235,6 +273,20 @@ frappe.ui.form.on('Parcel', {
 		}
 	},
 
+	get_rate_commission :function (frm){
+		frappe.call({
+			method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.get_rate_for_agent',
+			args: {
+				agent: frm.doc.agent,
+			},
+			callback: function(r) {
+				if (r.message) {
+					frm.set_value('commission_rate', r.message); 
+				}
+			}
+		});
+	},
+
 	agent :function(frm){
 		if (frm.doc.agent && frm.doc.company) {
 			frappe.call({
@@ -249,7 +301,82 @@ frappe.ui.form.on('Parcel', {
 					}
 				}
 			});
-		}
+		
+		//###############
+		frm.trigger('get_rate_commission');
+
+	
+		frm.trigger('calculate_total_amount');
+
+	}},
+
+	
+	calculate_commission: function (frm) {
+		let section = frm.fields_dict.commission_section;
+    if (section && section.df.hidden) {
+        // إذا كان مخفيًا، تعيين العمولة إلى 0 وعدم المتابعة في الحساب
+        frm.set_value('total_commission', 0);
+        return;
+    }
+	
+	
+        if (!frm.doc.commission_rate || frm.doc.commission_rate === 0) {
+            frm.set_value('total_commission', 0);
+            return;
+        }
+        frappe.call({
+            method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.calculate_commission',
+            args: {
+                total: frm.doc.total``,
+                commission_rate: frm.doc.commission_rate
+            },
+            callback: function(r) {
+                if (r.message) {
+                    frm.set_value('total_commission', r.message);
+                } else {
+                    frm.set_value('total_commission', 0);
+                }
+                console.log('Total Commission:', frm.doc.total_commission);
+            }
+        });
+    },
+	total_commission: function(frm) {
+        frm.trigger('calculate_rate_from_commission');
+    },
+	calculate_rate_from_commission: function(frm) {
+        frappe.call({
+            method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.calculate_rate',
+            args: {
+                total: frm.doc.total,
+                total_commission: frm.doc.total_commission
+            },
+            callback: function(r) {
+                if (r.message) {
+                    frm.set_value('commission_rate', r.message);
+                }
+            }
+        });
+    },
+	calculate_total_amount: function (frm) {
+        let total_amount = 0;
+        if (frm.doc.content.length > 0) {
+            frm.doc.content.forEach(function (row) {
+                total_amount += row.rate || 0;
+            });
+        }
+        frm.set_value('shipping_amount', total_amount);
+		frm.set_value('total', total_amount);
+		frm.trigger('calculate_commission');
+
+       // console.log('Total Shipment Amount:', total_amount);
+       // frm.trigger('calculate_commission'); // Call calculate_commission only once
+    },
+	
+	total_commission: function(frm) {
+        frm.trigger('calculate_rate_from_commission');
+    },
+	commission_rate : function(frm) {
+		frm.trigger('calculate_commission');
 	},
 	shipper_name : function(frm){
 			if (frm.doc.shipper_name && frm.doc.company) {
@@ -359,6 +486,8 @@ frappe.ui.form.on('Parcel', {
 	},
 
 	calculate_total(frm) {
+		frm.trigger('calculate_total_amount');
+
 		frm.set_value('total', frm.get_sum('content', 'amount') + frm.doc.shipping_amount);
 		frm.set_value('total_actual_weight', frm.get_sum('content', 'actual_weight'));
 		frm.set_value('total_volumetric_weight', frm.get_sum('content', 'volumetric_weight'));

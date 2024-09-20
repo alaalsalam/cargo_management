@@ -2,9 +2,9 @@ frappe.listview_settings['Warehouse Receipt'] = {
 	filters: [['status', 'not in', ['Sorting', 'Finished']]],
 	hide_name_column: true,
 
-	onload(listview) {
-		listview.page.sidebar.toggle(false); // Hide Sidebar
-	},
+	// onload(listview) {
+	// 	listview.page.sidebar.toggle(false); // Hide Sidebar
+	// },
 
 	before_render() {},
 

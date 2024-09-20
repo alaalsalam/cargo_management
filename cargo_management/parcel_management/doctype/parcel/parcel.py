@@ -37,10 +37,11 @@ class Parcel(AccountsController):
 		carrier_real_delivery: DF.Datetime | None
 		carrier_status: DF.Literal["Unknown", "Pre Transit", "In Transit", "Out For Delivery", "Available For Pickup", "Delivered", "Return To Sender", "Failure", "Cancelled", "Error"]
 		carrier_status_detail: DF.Data | None
+		commission_rate: DF.Currency
 		company: DF.Link
 		content: DF.Table[ParcelContent]
 		currency: DF.Link | None
-		debit_to: DF.Link
+		debit_to: DF.Link | None
 		destination: DF.Data | None
 		easypost_id: DF.Data | None
 		est_delivery_1: DF.Date | None
@@ -57,20 +58,22 @@ class Parcel(AccountsController):
 		piece_type: DF.Literal["Box", "Envelope", "Pallet", "Carton", "Luggage", "Crate", "Others"]
 		receiver_address: DF.Data | None
 		receiver_email: DF.Data | None
-		receiver_name: DF.Link | None
+		receiver_name: DF.Link
 		receiver_number: DF.Data | None
 		receivers_card_image: DF.Attach | None
 		shipper: DF.Link | None
 		shipper_address: DF.Data | None
 		shipper_card_image: DF.Attach | None
 		shipper_email: DF.Data | None
-		shipper_name: DF.Link | None
+		shipper_name: DF.Link
 		shipper_number: DF.Data | None
+		shipping_account: DF.Link | None
 		shipping_amount: DF.Currency
 		signed_by: DF.Data | None
 		status: DF.Literal["Awaiting Receipt", "Awaiting Confirmation", "In Extraordinary Confirmation", "Awaiting Departure", "In Transit", "In Customs", "Sorting", "To Bill", "Unpaid", "For Delivery or Pickup", "Finished", "Cancelled", "Never Arrived", "Returned to Sender"]
 		total: DF.Currency
 		total_actual_weight: DF.Float
+		total_commission: DF.Currency
 		total_net_height: DF.Float
 		total_net_length: DF.Float
 		total_net_width: DF.Float
@@ -326,32 +329,38 @@ class Parcel(AccountsController):
 
 		self.make_agent_gl_entry(gl_entries)
 		# self.make_parcel_gl_entries(gl_entries)
+		self.make_agent_commission_gl_entry(gl_entries)
 
 
 		return gl_entries
-
+		
 	def make_agent_gl_entry(self, gl_entries):
+		settings = frappe.get_value('Shipment Settings', None, 'commission')
+
+		# إذا كانت الإعدادات تشير إلى أن العمولة يجب أن تُحسب
+		if settings != 'From Parcel':
+			self.total_commission = 0
 		gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": self.debit_to,
-						"party_type": "Customer",
-						"party": self.shipper_name,
-						"posting_date": self.order_date,
-						"against": self.agent_account,
-						"debit": self.total,
-						"debit_in_account_currency": self.total
-						# if self.party_account_currency == self.company_currency
-						# else grand_total,
-						# "against_voucher": against_voucher,
-						# "against_voucher_type": self.doctype,
-						# "cost_center": self.cost_center,
-						# "project": self.project,
-					},
-					# self.party_account_currency,
-					item=self,
-				)
+			self.get_gl_dict(
+				{
+					"account": self.debit_to,
+					"party_type": "Customer",
+					"party": self.shipper_name,
+					"posting_date": self.order_date,
+					"against": self.agent_account,
+					"debit": self.total - self.total_commission,
+					# "debit_in_account_currency": self.total
+					# if self.party_account_currency == self.company_currency
+					# else grand_total,
+					# "against_voucher": against_voucher,
+					# "against_voucher_type": self.doctype,
+					# "cost_center": self.cost_center,
+					# "project": self.project,
+				},
+				# self.party_account_currency,
+				item=self,
 			)
+		)
 		gl_entries.append(
 			self.get_gl_dict(
 				{
@@ -359,7 +368,7 @@ class Parcel(AccountsController):
 					"posting_date": self.order_date,
 					"against": self.debit_to,
 					"credit": self.total,
-					"credit_in_account_currency": self.total,
+					# "credit_in_account_currency": self.total,
 					# "against_voucher": self.name,
 					# "against_voucher_type": self.doctype,
 					# "cost_center": self.cost_center,
@@ -369,44 +378,69 @@ class Parcel(AccountsController):
 			)
 		)
 
-	# def make_parcel_gl_entries(self, gl_entries):
-	# 	for item in self.get("warehouse_receipt_lines"):
-	# 		if item.shipping_amount:
-	# 			if self.commission_rate:
-	# 				commission_amount = item.shipping_amount * (self.commission_rate / 100)
-	# 				shipping_amount_after_commission = item.shipping_amount - commission_amount
-	# 			else:
-	# 				# إذا لم توجد نسبة العمولة، استخدم قيمة الشحن كما هي
-	# 				shipping_amount_after_commission = item.shipping_amount
 
-	# 			income_account = self.paid_to
-	# 			account_currency = get_account_currency(income_account)
-	# 			gl_entries.append(
-	# 				self.get_gl_dict(
-	# 					{
-	# 						"account": income_account,
-	# 						"against": self.agent,
-	# 						"credit": flt(shipping_amount_after_commission, item.precision("shipping_amount")),
-	# 						"credit_in_account_currency": flt(shipping_amount_after_commission, item.precision("shipping_amount")),
-	# 						"parcel": item.parcel,
-	# 					},
-	# 					account_currency,
-	# 					item=item,
-	# 				)
-	# 			)
+	def make_agent_commission_gl_entry(self, gl_entries):
+		settings = frappe.get_value('Shipment Settings', None, 'commission')
+
+		# إذا كانت الإعدادات تشير إلى أن العمولة يجب أن تُحسب
+		if settings != 'From Warehouse':
+			if self.shipping_account and self.total_commission:
+				gl_entries.append(
+					self.get_gl_dict(
+						{
+							"account": self.shipping_account,
+							"posting_date": self.order_date,
+							"against": self.debit_to,
+							"debit": self.total_commission,
+							# "credit_in_account_currency": self.total,
+							# "against_voucher": self.name,
+							# "against_voucher_type": self.doctype,
+							# "cost_center": self.cost_center,
+							# "project": self.project,
+						},
+						item=self,
+					)
+				)
 
 
-	# def update_from_api_data(self, api_data: dict) -> None:
-	# 	""" This updates the parcel with the data from the API. """
-	# 	print(api_data)
-	# 	self.__dict__.update(api_data)  # Updating all the DICT to the Parcel DocType
+		# def make_parcel_gl_entries(self, gl_entries):
+		# 	for item in self.get("warehouse_receipt_lines"):
+		# 		if item.shipping_amount:
+		# 			if self.commission_rate:
+		# 				commission_amount = item.shipping_amount * (self.commission_rate / 100)
+		# 				shipping_amount_after_commission = item.shipping_amount - commission_amount
+		# 			else:
+		# 				# إذا لم توجد نسبة العمولة، استخدم قيمة الشحن كما هي
+		# 				shipping_amount_after_commission = item.shipping_amount
 
-	# 	if api_data['carrier_status'] == 'Delivered':  # or api_data['carrier_status_detail'] == 'Arrived At Destination':
-	# 		self.change_status('Awaiting Confirmation')
-	# 	elif api_data['carrier_status'] == 'Return To Sender' or self.carrier_status_detail == 'Return':
-	# 		self.change_status('Returned to Sender')
-	# 	else:  # TODO: Change the status when the carrier status: failure, cancelled, error
-	# 		self.change_status('Awaiting Receipt')
+		# 			income_account = self.paid_to
+		# 			account_currency = get_account_currency(income_account)
+		# 			gl_entries.append(
+		# 				self.get_gl_dict(
+		# 					{
+		# 						"account": income_account,
+		# 						"against": self.agent,
+		# 						"credit": flt(shipping_amount_after_commission, item.precision("shipping_amount")),
+		# 						"credit_in_account_currency": flt(shipping_amount_after_commission, item.precision("shipping_amount")),
+		# 						"parcel": item.parcel,
+		# 					},
+		# 					account_currency,
+		# 					item=item,
+		# 				)
+		# 			)
+
+
+		# def update_from_api_data(self, api_data: dict) -> None:
+		# 	""" This updates the parcel with the data from the API. """
+		# 	print(api_data)
+		# 	self.__dict__.update(api_data)  # Updating all the DICT to the Parcel DocType
+
+		# 	if api_data['carrier_status'] == 'Delivered':  # or api_data['carrier_status_detail'] == 'Arrived At Destination':
+		# 		self.change_status('Awaiting Confirmation')
+		# 	elif api_data['carrier_status'] == 'Return To Sender' or self.carrier_status_detail == 'Return':
+		# 		self.change_status('Returned to Sender')
+		# 	else:  # TODO: Change the status when the carrier status: failure, cancelled, error
+		# 		self.change_status('Awaiting Receipt')
 
 	def _awaiting_confirmation_or_in_extraordinary_confirmation(self):
 		if self.carrier_real_delivery:

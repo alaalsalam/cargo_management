@@ -1,4 +1,32 @@
 frappe.ui.form.on('Warehouse Receipt', {
+    refresh: function(frm) {
+        frappe.call({
+            method: 'frappe.client.get_value',
+            args: {
+                doctype: 'Shipment Settings',  
+                fieldname: 'commission'        
+            },
+            callback: function(r) {
+                if (r.message && r.message.commission) {
+                    let commission_type = r.message.commission;
+                    
+                    if (commission_type === 'From Parcel') {
+                        frm.set_df_property('commission_section', 'hidden', 1);
+                    } else {
+                        frm.set_df_property('commission_section', 'hidden', 0);
+                        
+                        frm.collapse_section('commission_section');
+                    }
+                } else {
+                    frm.set_df_property('commission_section', 'hidden', 0);
+                    
+                    frm.collapse_section('commission_section');
+                }
+            }
+        });
+    }
+});
+frappe.ui.form.on('Warehouse Receipt', {
 	agent_account: function (frm) {
 		if (frm.set_party_account_based_on_party) return;
 	
@@ -25,7 +53,7 @@ frappe.ui.form.on('Warehouse Receipt', {
 						if (frm.doc.source_exchange_rate) {
 							frm.set_value("	", frm.doc.source_exchange_rate);
 						}
-						frm.set_value("received_amount", frm.doc.total_shipment_amount);
+						// frm.set_value("received_amount", frm.doc.total_shipment_amount);
 					} else {
 						frm.events.received_amount(frm);
 					}
@@ -123,13 +151,7 @@ frappe.ui.form.on('Warehouse Receipt', {
 		frm.events.show_general_ledger(frm);
 		erpnext.accounts.ledger_preview.show_accounting_ledger_preview(frm);
     },
-    calculate_total_amount: function (frm) {
-        let total_amount = 0;
-        frm.doc.child_table_fieldname.forEach(function (row) {
-            total_amount += row.amount || 0;
-        });
-        frm.set_value('total_shipment_amount', total_amount);
-    },
+
 	show_general_ledger: function (frm) {
 		if (frm.doc.docstatus > 0) {
 			frm.add_custom_button(
@@ -179,9 +201,9 @@ frappe.ui.form.on('Warehouse Receipt', {
 
 	onload_post_render: function (frm) {},
 
-	before_save: function (frm) {
-		calculate_total_amount_and_update_paid(frm);
-	},
+	// before_save: function (frm) {
+	// 	calculate_total_amount_and_update_paid(frm);
+	// },
 
 	after_save: function (frm) {},
 
@@ -212,7 +234,6 @@ frappe.ui.form.on('Warehouse Receipt', {
 
 	},
 
-	// Custom Functions
 	show_selector_dialog: function (frm, opts) {
 		// https://frappeframework.com/docs/v13/user/en/api/controls & https://frappeframework.com/docs/v13/user/en/api/dialog
 		// MultiselectDialog with Package List -> Issue: can select multiple
@@ -262,12 +283,31 @@ frappe.ui.form.on('Warehouse Receipt', {
 			frm.events.show_alerts(frm); // FIXME: Work on this
 		});
 	},
+	get_rate_commission :function (frm){
+		frappe.call({
+			method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.get_rate_for_agent',
+			args: {
+				agent: frm.doc.agent,
+			},
+			callback: function(r) {
+				if (r.message) {
+					frm.set_value('commission_rate', r.message); 
+				}
+			}
+		});
+	},
 	agent: function(frm) {
-		frm.set_value('commission_rate', '');
-		frm.set_value('total_commission', '');
+		frm.set_value('commission_rate', 0);
+		frm.set_value('total_commission', 0);
+		frm.set_value('total_shipment_amount', 0);
+		if (!frm.doc.company) {
+			frappe.msgprint(__('Pleas Enter Company'));
+			frappe.after_ajax(function() {
+                frm.set_value('agent', ''); // تعيين agent بعد إظهار الرسالة
+            });
 
-	
-		if (frm.doc.agent && frm.doc.company) {
+            return;
+		} else  {
 			frappe.call({
 				method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.get_account_for_company',
 				args: {
@@ -280,26 +320,12 @@ frappe.ui.form.on('Warehouse Receipt', {
 					}
 				}
 			});
-	
-			frappe.call({
-				method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.get_rate_for_agent',
-				args: {
-					agent: frm.doc.agent,
-				},
-				callback: function(r) {
-					if (r.message) {
-						frm.set_value('commission_rate', r.message);  
-					}
-				}
-			});
-		}
-	
-		if (!frm.doc.agent) {
-			return;
-		}
-	
-		fetch_packages_by_agent_and_transportation(frm);
-	
+			fetch_packages_by_agent_and_transportation(frm);
+
+        }
+
+
+		frm.trigger('get_rate_commission');
 		if (frm.doc.posting_date) {
 			frappe.call({
 				method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_party_and_account_balance",
@@ -321,49 +347,85 @@ frappe.ui.form.on('Warehouse Receipt', {
 				}
 			});
 		}
-	
-		frm.set_value('total_shipment_amount', '');
-	
-		frappe.run_serially([
-			() => {
-				return new Promise((resolve) => {
-					setTimeout(resolve, 500);  // تأخير لتحديث الحزم
-				});
-			},
-			() => frappe.call({
-				method: 'calculate_total_amount',
-				doc: frm.doc,
-				callback: function(r) {
-					if (r.message) {
-						frm.set_value('total_shipment_amount', r.message);
-					} else {
-						console.log("Error calculating total amount.");
-					}
-				}
-			})
-		]).then(() => {
-			// حساب العمولة بعد تحديث إجمالي الشحنة
-			frappe.call({
-				method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.calculate_commission',
-				args: {
-					total: frm.doc.total_shipment_amount,
-					commission_rate: frm.doc.commission_rate
-				},
-				callback: function(r) {
-					if (r.message) {
-						frm.set_value('total_commission', r.message);
-					}
-				}
-			});
-		});
-		
 	},
-	
+    calculate_commission: function (frm) {
+        if (!frm.doc.commission_rate || frm.doc.commission_rate === 0) {
+            frm.set_value('total_commission', 0);
+            return;
+        }
+        frappe.call({
+            method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.calculate_commission',
+            args: {
+                total: frm.doc.total_shipment_amount,
+                commission_rate: frm.doc.commission_rate
+            },
+            callback: function(r) {
+                if (r.message) {
+                    frm.set_value('total_commission', r.message);
+                } else {
+                    frm.set_value('total_commission', 0);
+                }
+                console.log('Total Commission:', frm.doc.total_commission);
+            }
+        });
+    },
+	total_commission: function(frm) {
+        frm.trigger('calculate_rate_from_commission');
+    },
+	calculate_rate_from_commission: function(frm) {
+        frappe.call({
+            method: 'cargo_management.warehouse_management.doctype.warehouse_receipt.warehouse_receipt.calculate_rate',
+            args: {
+                total: frm.doc.total_shipment_amount,
+                total_commission: frm.doc.total_commission
+            },
+            callback: function(r) {
+                if (r.message) {
+                    frm.set_value('commission_rate', r.message);
+                }
+            }
+        });
+    },
+    calculate_total_amount: function (frm) {
+        let total_amount = 0;
+        if (frm.doc.warehouse_receipt_lines.length > 0) {
+            frm.doc.warehouse_receipt_lines.forEach(function (row) {
+                total_amount += row.shipping_amount || 0;
+            });
+        }
+        frm.set_value('total_shipment_amount', total_amount);
+        console.log('Total Shipment Amount:', total_amount);
+        frm.trigger('calculate_commission'); // Call calculate_commission only once
+    },
+
+	calculate_weight_ib : function(frm){
+		let calculate_weight_ib = 0;
+        if (frm.doc.warehouse_receipt_lines.length > 0) {
+            frm.doc.warehouse_receipt_lines.forEach(function (row) {
+                calculate_weight_ib += row.warehouse_est_weight || 0;
+            });
+        }
+        frm.set_value('warehouse_est_gross_weight', calculate_weight_ib);
+	},
+	calculate_weight_vol : function(frm){
+		let calculate_weight_vol = 0;
+        if (frm.doc.warehouse_receipt_lines.length > 0) {
+            frm.doc.warehouse_receipt_lines.forEach(function (row) {
+                calculate_weight_vol += row.volumetric_weight || 0;
+            });
+        }
+        frm.set_value('volumetric_weight', calculate_weight_vol);
+	},
+
+	commission_rate : function(frm) {
+		frm.trigger('calculate_commission');
+	},
     transportation: function(frm) {
         if (!frm.doc.agent) {
             return;
         }
         fetch_packages_by_agent_and_transportation(frm);
+
     },
 	show_alerts: function(frm) {
 		// TODO: Make this come from API?
@@ -375,12 +437,11 @@ frappe.ui.form.on('Warehouse Receipt', {
 		}
 	},
 	onload: function(frm){
-		let today = frappe.datetime.nowdate();  // الحصول على تاريخ اليوم
+		let today = frappe.datetime.nowdate();
         frm.set_value('posting_date', today); 
 	}	
 });
 function fetch_packages_by_agent_and_transportation(frm) {
-    // نزيل بيانات الجدول الحالية لتجنب التكرار
     frm.clear_table('warehouse_receipt_lines');
 
     frappe.call({
@@ -396,12 +457,12 @@ function fetch_packages_by_agent_and_transportation(frm) {
         r.message.packages.forEach(package_doc => {
             frm.add_child('warehouse_receipt_lines', {
                 'parcel': package_doc.name,
-                'parcel_transportation': package_doc.transportation,  // إضافة الحقل transportation
+                'parcel_transportation': package_doc.transportation, 
                 'parcel_customer': package_doc.shipper_name,
 				'parcel_customer_name':package_doc.receiver_name,
-				'type': package_doc.piece_type,  // إضافة الحقل piece_type
-				// 'warehouse_est_weight':package_doc.total_actual_weight,
-				// 'volumetric_weight': package_doc.total_volumetric_weight,
+				'type': package_doc.piece_type,
+				'warehouse_est_weight':package_doc.total_actual_weight,
+				'volumetric_weight': package_doc.total_volumetric_weight,
                 'length': package_doc.total_net_length,
                 'width': package_doc.total_net_width,
                 'height': package_doc.total_net_height,
@@ -409,22 +470,19 @@ function fetch_packages_by_agent_and_transportation(frm) {
             });
         });
 
-        // تحديث الجدول بعد إضافة البيانات
         frm.refresh_field('warehouse_receipt_lines');
+		frm.trigger('calculate_total_amount');
+		frm.trigger('calculate_weight_ib');
+		frm.trigger('calculate_weight_vol');
     });
 }
 
-function calculate_total_amount_and_update_paid(frm) {
-    frappe.call({
-        method: 'calculate_total_amount',
-        doc: frm.doc,
-        callback: function(r) {
-            if (r.message) {
-                frm.set_value('total_shipment_amount', r.message);
-                frm.refresh_field('total_shipment_amount'); // لتحديث الحقل في النموذج
-            } else {
-                console.log("Error calculating total amount.");
-            }
-        }
-    });
-}
+
+frappe.ui.form.on('Warehouse Receipt Line', {
+    warehouse_receipt_lines_remove : function(frm, cdt, cdn) {
+		frm.trigger('calculate_total_amount');
+		frm.trigger('calculate_weight_ib');
+		frm.trigger('calculate_weight_vol');
+
+	},
+});
