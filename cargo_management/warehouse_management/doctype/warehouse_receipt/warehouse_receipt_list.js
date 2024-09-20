@@ -10,7 +10,7 @@ frappe.listview_settings['Warehouse Receipt'] = {
 
 	// TODO: Migrate to Document States? Maybe when frappe core starts using it.
 	get_indicator: (doc) => [__(doc.status), {
-		'Draft': 'gray',
+		'Draft': 'yellow',
 		'Open': 'orange',
 		'Awaiting Departure': 'yellow',
 		'In Transit': 'purple',

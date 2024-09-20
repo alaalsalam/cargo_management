@@ -50,6 +50,8 @@ def get_non_table_doctypes():
     # return [doctype['name'] for doctype in doctypes]
     return docs_dics
 
+
+
 doctype_list_js = get_non_table_doctypes()
 # doctype_list_js = {"*" : "public/js/list_view.js"}
 
@@ -248,6 +250,18 @@ doc_events = {
 # auth_hooks = [
 #   "v15.auth.validate"
 # ]
+doc_events = {
+    "Parcel Content": {
+        "on_update": "cargo_management.parcel_management.doctype.parcel.parcel.calculate_shipping_amountt",
+    }
+}
+
+# scheduler_events = {
+#     "daily": [
+#         "your_app_path.update_cargo_shipment_status"
+#     ]
+# }
+
 
 global_search_doctypes = {
 	"Default": [

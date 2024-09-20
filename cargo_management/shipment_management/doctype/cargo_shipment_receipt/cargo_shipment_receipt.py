@@ -1,9 +1,11 @@
+import frappe
 from frappe.model.document import Document
-
+from cargo_management.utils import get_list_from_child_table
 
 class CargoShipmentReceipt(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
+
 
 	from typing import TYPE_CHECKING
 
@@ -11,9 +13,11 @@ class CargoShipmentReceipt(Document):
 		from cargo_management.shipment_management.doctype.cargo_shipment_receipt_line.cargo_shipment_receipt_line import CargoShipmentReceiptLine
 		from frappe.types import DF
 
+		amended_from: DF.Link | None
 		arrival_date: DF.Date | None
 		cargo_shipment: DF.Link
 		cargo_shipment_receipt_lines: DF.Table[CargoShipmentReceiptLine]
+		delivery_for_customer: DF.Check
 		departure_date: DF.Date | None
 		gross_weight: DF.Float
 		mute_emails: DF.Check
@@ -46,3 +50,54 @@ class CargoShipmentReceipt(Document):
 			return True
 
 		return False
+	
+	
+
+	def update_parcel_status(self, status):
+		# استرجاع قائمة الطرود من جدول cargo_shipment_lines
+		parcels = get_list_from_child_table(self.cargo_shipment_receipt_lines, 'package')
+
+		# تغيير حالة كل طرد بناءً على الحالة المدخلة
+		for parcel in parcels:
+			# تحميل الطرد المرتبط
+			parcel_doc = frappe.get_doc('Parcel', parcel)
+			parcel_doc.status = status  # تعيين الحالة مباشرة
+			parcel_doc.save()
+			# تحقق من الحالة الحالية للطرد قبل التحديث
+			 
+				# تحديث حالة الطرد
+				  # حفظ التغييرات
+
+		# تأكيد التغييرات في قاعدة البيانات
+		frappe.db.commit()
+		
+	def In_transit(self):
+			frappe.msgprint(f"تم تحديث حالة  إلى 'In Transit'")
+
+			# تحديث حالة cargo_shipment إلى In Transit عند الحفظ
+			if self.cargo_shipment:
+				cargo_shipment = frappe.get_doc('Cargo Shipment', self.cargo_shipment)
+				cargo_shipment.status = "In Transit"
+				cargo_shipment.save()
+				frappe.msgprint(f"تم تحديث حالة {cargo_shipment.name} إلى 'In Transit'")
+
+			
+
+	def before_save(self):
+		# تحقق من بيانات الجمارك أو النقل
+
+		if self.delivery_for_customer:
+			frappe.msgprint(f"Delivery for Customer is checked, updating status to For Delivery or Pickup")  # للتصحيح
+			self.update_parcel_status('Sorting')
+		else:  # إذا لم تكن هناك بيانات مضافة
+			frappe.msgprint(f"No For Delivery or Pickup")  # للتصحيح
+		
+
+	def on_submit(self):
+		self.In_transit()
+		# نفس المنطق يمكن تطبيقه عند تقديم المستند
+
+		if self.delivery_for_customer:  # إذا كانت بيانات التسليم للعميل مفعلة
+			self.update_parcel_status('Sorting')
+		else:  # إذا لم تكن هناك بيانات مضافة
+			frappe.msgprint(f"No For Delivery or Pickup")  # للتصحيح

@@ -151,13 +151,12 @@
    "fetch_from": "parcel.shipping_amount",
    "fieldname": "shipping_amount",
    "fieldtype": "Currency",
-   "label": "Shipping Amount",
-   "read_only": 1
+   "label": "Shipping Amount"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-09-09 21:27:03.119173",
+ "modified": "2024-09-16 21:10:19.508257",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt Line",

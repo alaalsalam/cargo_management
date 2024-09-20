@@ -9,6 +9,7 @@
   "from_value",
   "to_value",
   "shipping_amount",
+  "item_group",
   "column_break_xodk"
  ],
  "fields": [
@@ -36,12 +37,18 @@
   {
    "fieldname": "column_break_xodk",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "Item Group"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-27 20:34:00.509843",
+ "modified": "2024-09-18 23:17:09.951749",
  "modified_by": "Administrator",
  "module": "Parcel Selling",
  "name": "Parcel Rule Condition",

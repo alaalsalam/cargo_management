@@ -15,6 +15,7 @@ class ParcelRuleCondition(Document):
 		from frappe.types import DF
 
 		from_value: DF.Float
+		item_group: DF.Link | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data

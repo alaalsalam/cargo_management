@@ -30,6 +30,8 @@ class ShipmentSettings(Document):
 		expense_account_group: DF.TableMultiSelect[ShippingExpensesAccountGroup]
 		fuel_item: DF.Link
 		fuel_item_group: DF.Link | None
+		in_customs: DF.Check
+		in_transit: DF.Check
 		is_submit: DF.Check
 		sales_item_group: DF.Link | None
 		vehicle_fuel_parent_warehouse: DF.Link | None

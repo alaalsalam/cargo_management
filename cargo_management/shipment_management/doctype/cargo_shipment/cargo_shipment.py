@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import today
 from cargo_management.utils import get_list_from_child_table
 from frappe.model.document import Document
 from frappe.utils import nowdate, cstr, cint, flt, comma_or, now
@@ -17,25 +18,34 @@ class CargoShipment(Document):
         from cargo_management.shipment_management.doctype.cargo_shipment_warehouse.cargo_shipment_warehouse import CargoShipmentWarehouse
         from frappe.types import DF
 
+        actual_arrival_date: DF.Date | None
         arrival_date: DF.Date | None
         cargo_shipment_lines: DF.Table[CargoShipmentLine]
+        cargo_shipment_no: DF.Int
         company: DF.Link | None
         currency: DF.Link
+        customs_amount: DF.Currency
+        customs_arrival_date: DF.Date | None
+        customs_supplier: DF.Link
         departure_date: DF.Date
+        estimated_arrival_date: DF.Date
         estimated_gross_weight_by_carriers_in_pounds: DF.Float
         estimated_gross_weight_by_warehouse_in_pounds: DF.Float
         expected_arrival_date: DF.Date | None
+        is_finished: DF.Check
         mute_emails: DF.Check
         naming_series: DF.Literal["SHIP-.YYYY.-"]
         net_total: DF.Currency
         pieces: DF.Int
+        reservation_number: DF.Int
         scan_barcode: DF.Data | None
         shipping_amount: DF.Currency
-        status: DF.Literal["Awaiting Departure", "In Transit", "Sorting", "Finished"]
+        status: DF.Literal["Awaiting Departure", "Waiting for Arrival", "In Transit", "Sorting", "Finished"]
         supplier: DF.Link
         total: DF.Currency
         total_actual_weight: DF.Float
         total_qty: DF.Int
+        transit_supplier: DF.Link
         transportation: DF.Literal["Sea", "Air"]
         warehouse_lines: DF.Table[CargoShipmentWarehouse]
     # end: auto-generated types
@@ -74,8 +84,267 @@ class CargoShipment(Document):
 
         return False
 
+    # def update_parcel_status_to_waiting_for_arrival(self):
+
+    #     parcels = get_list_from_child_table(self.cargo_shipment_lines, 'package')
+
+    #     for parcel in parcels:
+
+    #         parcel_doc = frappe.get_doc('Parcel', parcel)
+            
+    #         if parcel_doc.status == 'Awaiting Departure':  
+
+    #             parcel_doc.change_status('In Transit')
+    #             parcel_doc.save()  
+    #             frappe.db.commit()      
+
+    # def before_save(self):
+
+    #     self.update_parcel_status_to_waiting_for_arrival()
+    # def on_submit(self):
+
+    #     self.update_parcel_status_to_waiting_for_arrival()
+
+    # def update_parcel_status(self, status):
+    #     # استرجاع قائمة الطرود من جدول cargo_shipment_lines
+    #     parcels = get_list_from_child_table(self.cargo_shipment_lines, 'package')
+
+    #     # تغيير حالة كل طرد بناءً على الحالة المدخلة
+    #     for parcel in parcels:
+    #         # تحميل الطرد المرتبط
+    #         parcel_doc = frappe.get_doc('Parcel', parcel)
+            
+    #         # تحقق من الحالة الحالية للطرد قبل التحديث
+    #         if parcel_doc.status == 'Awaiting Departure':  
+    #             # تحديث حالة الطرد
+    #             parcel_doc.status = status  # تعيين الحالة مباشرة
+    #             parcel_doc.save()  # حفظ التغييرات
+
+    #     # تأكيد التغييرات في قاعدة البيانات
+    #     frappe.db.commit()
+
+    # def before_save(self):
+    #     # إذا كانت بيانات الجمارك مضافة، يتم تحديث الحالة إلى "In Customs"
+    #     if self.customs_supplier:  # تحقق مما إذا كانت بيانات الجمارك موجودة
+    #         frappe.msgprint(f"Customs Supplier found, updating status to In Customs")  # للتصحيح
+    #         self.update_parcel_status('In Customs')
+    #     else:
+    #         frappe.msgprint(f"No Customs Supplier, updating status to In Transit")  # للتصحيح
+    #         self.update_parcel_status('For Delivery or Pickup')
+
+    # def on_submit(self):
+    #     # نفس المنطق يمكن تطبيقه عند تقديم المستند
+    #     if self.customs_supplier:  # تحقق مما إذا كانت بيانات الجمارك موجودة
+    #         self.update_parcel_status('In Customs')
+    #     else:
+    #         self.update_parcel_status('For Delivery or Pickup')
 
 
+    # def update_parcel_status(self, status):
+    #     # استرجاع قائمة الطرود من جدول cargo_shipment_lines
+    #     parcels = get_list_from_child_table(self.cargo_shipment_lines, 'package')
+
+    #     # تغيير حالة كل طرد بناءً على الحالة المدخلة
+    #     for parcel in parcels:
+    #         # تحميل الطرد المرتبط
+    #         parcel_doc = frappe.get_doc('Parcel', parcel)
+            
+    #         # تحقق من الحالة الحالية للطرد قبل التحديث
+    #         if parcel_doc.status == 'Awaiting Departure':  
+    #             # تحديث حالة الطرد
+    #             parcel_doc.status = status  # تعيين الحالة مباشرة
+    #             parcel_doc.save()  # حفظ التغييرات
+
+    #     # تأكيد التغييرات في قاعدة البيانات
+    #     frappe.db.commit()
+
+    # def after_save(self):
+    #     # تحقق من بيانات الجمارك أو النقل
+  
+    #     if not self.is_new():
+    #         self.reload()
+    #         self.save()
+    #         frappe.db.commit()  
+    #         if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+    #             frappe.log(f"Customs Supplier found, updating status to In Customs")  # للتصحيح
+    #             self.update_parcel_status('In Customs')
+    #         elif self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+    #             frappe.db.commit()
+    #             frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # للتصحيح
+    #             self.update_parcel_status('In Transit')
+    #             frappe.db.commit()
+    #         else:  # إذا لم تكن هناك بيانات مضافة
+    #             frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # للتصحيح
+    #             self.update_parcel_status('For Delivery or Pickup')
+    #     elif self.is_new():
+    #             if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+    #                 frappe.log(f"Customs Supplier found, updating status to In Customs")  # للتصحيح
+    #                 self.update_parcel_status('In Customs')
+    #             elif self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+    #                 frappe.db.commit()
+    #                 frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # للتصحيح
+    #                 self.update_parcel_status('In Transit')
+    #                 frappe.db.commit()
+    #             else:  # إذا لم تكن هناك بيانات مضافة
+    #                 frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # للتصحيح
+    #                 self.update_parcel_status('For Delivery or Pickup')
+
+    def update_parcel_status(self, status):
+        # استرجاع قائمة الطرود من جدول cargo_shipment_lines
+        parcels = get_list_from_child_table(self.cargo_shipment_lines, 'package')
+
+        for parcel in parcels:
+            # تحميل الطرد المرتبط
+            parcel_doc = frappe.get_doc('Parcel', parcel)
+            
+          
+            parcel_doc.status = status
+            parcel_doc.save()  # حفظ التغييرات
+
+    # def before_save(self):
+    #     # تحقق من بيانات الجمارك أو النقل
+    #     if not self.is_new():
+    #         # تحديث حالة الطرود فقط بدون إعادة الحفظ
+    #         if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+    #             frappe.msgprint(f"Customs Supplier found, updating status to In Customs")  # رسالة للمستخدم
+    #             self.update_parcel_status('In Customs')
+    #         elif self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+    #             frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # رسالة للمستخدم
+    #             self.update_parcel_status('In Transit')
+    #         else:  # إذا لم تكن هناك بيانات مضافة
+    #             frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # رسالة للمستخدم
+    #             self.update_parcel_status('For Delivery or Pickup')
+
+    #     # التعامل مع المستند الجديد
+    #     elif self.is_new():
+    #         if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+    #             frappe.msgprint(f"Customs Supplier found, updating status to In Customs")  # رسالة للمستخدم
+    #             self.update_parcel_status('In Customs')
+    #         elif self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+    #             frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # رسالة للمستخدم
+    #             self.update_parcel_status('In Transit')
+    #         else:  # إذا لم تكن هناك بيانات مضافة
+    #             frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # رسالة للمستخدم
+    #             self.update_parcel_status('For Delivery or Pickup')
+
+
+    def on_submit(self):
+        # نفس المنطق يمكن تطبيقه عند تقديم المستند
+        if not self.is_new():
+            self.save()
+            frappe.db.commit()
+        if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+            self.update_parcel_status('In Customs')
+        elif self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+            self.update_parcel_status('In Transit')
+        else:  # إذا لم تكن هناك بيانات مضافة
+            self.update_parcel_status('Waiting for Arrival')
+        self.status = 'Awaiting Departure'
+        self.save() 
+
+
+    
+
+    # def update_cargo_shipment_status():
+    #     # جلب جميع مستندات Cargo Shipment التي لم تصل بعد وتطابق تاريخ اليوم مع departure_date
+    #     shipments = frappe.get_all('Cargo Shipment', filters={'departure_date': today(), 'status': ['!=', 'Waiting for Arrival']})
+        
+    #     for shipment in shipments:
+    #         # تحميل المستند
+    #         shipment_doc = frappe.get_doc('Cargo Shipment', shipment.name)
+            
+    #         # تحديث الحالة إلى Waiting for Arrival
+    #         shipment_doc.status = 'Waiting for Arrival'
+    #         shipment_doc.save()
+            
+    #     frappe.db.commit()
+
+
+
+
+    def update_warehouse_receipt_status(self, status):
+        # استرجاع قائمة الويرهاوس ريسيبت من جدول cargo_shipment_lines
+        warehouse_receipts = get_list_from_child_table(self.cargo_shipment_lines, 'warehouse_receipt')
+
+        # تغيير حالة كل مستند Warehouse Receipt بناءً على الحالة المدخلة
+        for receipt in warehouse_receipts:
+            if receipt:  # تحقق من أن الحقل ليس فارغًا
+                try:
+                    # تحميل مستند Warehouse Receipt المرتبط
+                    warehouse_receipt_doc = frappe.get_doc('Warehouse Receipt', receipt)
+                    
+                    # تحديث حالة المستند
+                    warehouse_receipt_doc.status = status  # تعيين الحالة مباشرة
+                    warehouse_receipt_doc.save()  # حفظ التغييرات
+
+                except frappe.DoesNotExistError:
+                    frappe.msgprint(f"Warehouse Receipt {receipt} does not exist", alert=True)
+
+        # تأكيد التغييرات في قاعدة البيانات
+        frappe.db.commit()
+
+    # def before_save(self):
+    #     # تحقق من وجود transit_supplier لتحديث حالة الويرهاوس ريسيبت
+    #     if self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+    #         frappe.msgprint(f"Transit Supplier found, updating Warehouse Receipt status to In Transit")  # رسالة للمستخدم
+    #         self.update_warehouse_receipt_status('In Transit')
+    #     else:  # إذا لم تكن بيانات النقل مضافة
+    #         frappe.msgprint(f"No Transit Supplier found, updating Warehouse Receipt status to Awaiting Departure")  # رسالة للمستخدم
+    #         self.update_warehouse_receipt_status('Awaiting Departure')
+
+
+    def validate(self):        
+        # self.status = 'Awaiting Departure'
+        self.mark_parcel_as_finished()
+        if not self.is_new():
+        # تحديث حالة الطرود فقط بدون إعادة الحفظ
+            if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+                frappe.msgprint(f"Customs Supplier found, updating status to In Customs")  # رسالة للمستخدم
+                self.update_parcel_status('In Customs')
+            elif self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+                frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # رسالة للمستخدم
+                self.update_parcel_status('In Transit')
+                self.update_warehouse_receipt_status('In Transit')
+            else:  # إذا لم تكن هناك بيانات مضافة
+                frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # رسالة للمستخدم
+                self.update_parcel_status('Waiting for Arrival')
+
+
+
+
+        elif self.is_new():
+            if self.customs_supplier:  # إذا كانت بيانات الجمارك مضافة
+                frappe.msgprint(f"Customs Supplier found, updating status to In Customs")  # رسالة للمستخدم
+                self.update_parcel_status('In Customs')
+            elif self.transit_supplier:
+                frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # رسالة للمستخدم
+                self.update_parcel_status('In Transit')
+                self.update_warehouse_receipt_status('In Transit')
+            else:  # إذا لم تكن هناك بيانات مضافة
+                frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # رسالة للمستخدم
+                self.update_parcel_status('Waiting for Arrival')
+
+        if self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+            frappe.msgprint(f"Transit Supplier found, updating Warehouse Receipt status to In Transit")  # رسالة للمستخدم
+            self.update_warehouse_receipt_status('In Transit')
+        else:  # إذا لم تكن بيانات النقل مضافة
+            frappe.msgprint(f"No Transit Supplier found, updating Warehouse Receipt status to Awaiting Departure")  # رسالة للمستخدم
+            self.update_warehouse_receipt_status('Awaiting Departure')
+
+
+
+        # if self.transit_supplier:  # إذا كانت بيانات النقل مضافة
+        #     frappe.msgprint(f"Transit Supplier found, updating status to In Transit")  # للتصحيح
+        #     self.update_parcel_status('In Transit')
+        # else:  # إذا لم تكن هناك بيانات مضافة
+        #     frappe.msgprint(f"No Customs or Transit Supplier found, updating status to For Delivery or Pickup")  # للتصحيح
+        #     self.update_parcel_status('Awaiting Departure')
+
+
+    def mark_parcel_as_finished(self):
+            if self.is_finished and self.status != 'Finished':
+                    self.db_set('status', 'Finished', update_modified=False)
+                    
     @frappe.whitelist()
     def check_barcode(self, barcode):
         # Step 1: Filter the Cargo Registration based on the barcode
@@ -152,6 +421,8 @@ class CargoShipment(Document):
         return {"status": "success", "message": "Manifest numbers updated successfully."}
 
 
+
+
 @frappe.whitelist()
 def create_purchase_invoice(doc, rows):
     doc = frappe.get_doc(json.loads(doc))
@@ -216,3 +487,21 @@ def create_purchase_invoice(doc, rows):
         # return invoice
     else:
         return invoice
+
+
+
+# @frappe.whitelist()
+# def get_parcels_from_warehouses(warehouse_references):
+#     parcels = []
+#     # جلب جميع الطرود المرتبطة بالمخازن المحددة
+#     if warehouse_references:
+#         warehouse_receipts = frappe.get_all('Warehouse Receipt Line', 
+#                                             filters={'parent': ['in', warehouse_references]},
+#                                             fields=['parcel'])
+        
+#         for receipt in warehouse_receipts:
+#             parcels.append(receipt.parcel)
+    
+#     return parcels
+
+

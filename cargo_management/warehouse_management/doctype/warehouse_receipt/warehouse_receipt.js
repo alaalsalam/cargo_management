@@ -26,6 +26,8 @@ frappe.ui.form.on('Warehouse Receipt', {
         });
     }
 });
+
+
 frappe.ui.form.on('Warehouse Receipt', {
 	agent_account: function (frm) {
 		if (frm.set_party_account_based_on_party) return;
@@ -40,6 +42,7 @@ frappe.ui.form.on('Warehouse Receipt', {
 			}
 		);
 	},
+	
 	paid_to: function (frm) {
 		if (frm.set_party_account_based_on_party) return;
 

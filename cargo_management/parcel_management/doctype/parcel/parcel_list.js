@@ -141,11 +141,12 @@ frappe.listview_settings['Parcel'] = {
 	get_indicator: (doc) => [__(doc.status), {
 		'Awaiting Receipt': 'blue',
 		'Awaiting Confirmation': 'orange',
+		'Waiting for Arrival':'yellow',
 		'In Extraordinary Confirmation': 'pink',
 		'Awaiting Departure': 'yellow',
 		'In Transit': 'purple',
 		'In Customs': 'gray',
-		'Sorting': 'green',
+		'o': 'green',
 		'To Bill': 'green',
 		'Unpaid': 'red',
 		'For Delivery or Pickup': 'cyan',

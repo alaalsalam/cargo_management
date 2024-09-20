@@ -87,12 +87,16 @@
   "amended_from",
   "more_info_tab",
   "accounts_details_section",
-  "agent_account",
+  "receiving_account",
   "debit_to",
   "commission_section",
-  "shipping_account",
+  "agent_account",
   "commission_rate",
-  "total_commission"
+  "total_commission",
+  "section_break_zhlv",
+  "not_arrived",
+  "returned_to_sender",
+  "is_parcel_received"
  ],
  "fields": [
   {
@@ -120,6 +124,7 @@
    "options": "Drop Off\nPick Up\nUnknown\nAmazon\nUSPS\nUPS\nDHL\nFedEx\nOnTrac\nCainiao\nSF Express\nYanwen\nYunExpress\nSunYou\nPitney Bowes\nVeho"
   },
   {
+   "allow_on_submit": 1,
    "bold": 1,
    "columns": 2,
    "fieldname": "status",
@@ -129,7 +134,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Awaiting Receipt\nAwaiting Confirmation\nIn Extraordinary Confirmation\nAwaiting Departure\nIn Transit\nIn Customs\nSorting\nTo Bill\nUnpaid\nFor Delivery or Pickup\nFinished\nCancelled\nNever Arrived\nReturned to Sender",
+   "options": "Awaiting Receipt\nWaiting for Arrival\nAwaiting Confirmation\nIn Extraordinary Confirmation\nAwaiting Departure\nIn Transit\nIn Customs\nSorting\nTo Bill\nUnpaid\nFor Delivery or Pickup\nFinished\nCancelled\nNever Arrived\nReturned to Sender",
    "search_index": 1
   },
   {
@@ -629,23 +634,11 @@
    "label": "Accounts Details"
   },
   {
-   "fieldname": "debit_to",
-   "fieldtype": "Link",
-   "label": "Debit To",
-   "options": "Account"
-  },
-  {
    "fieldname": "agent_account",
    "fieldtype": "Link",
    "label": "Agent Account",
    "options": "Account",
    "reqd": 1
-  },
-  {
-   "fieldname": "shipping_account",
-   "fieldtype": "Link",
-   "label": "Shipping Account",
-   "options": "Account"
   },
   {
    "fieldname": "commission_rate",
@@ -662,6 +655,43 @@
    "fieldname": "commission_section",
    "fieldtype": "Section Break",
    "label": "Commission"
+  },
+  {
+   "fieldname": "receiving_account",
+   "fieldtype": "Link",
+   "label": "Receiving Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "debit_to",
+   "fieldtype": "Link",
+   "label": "Customer Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "section_break_zhlv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "not_arrived",
+   "fieldtype": "Check",
+   "label": "Not Arrived"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "returned_to_sender",
+   "fieldtype": "Check",
+   "label": "Returned to Sender"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "is_parcel_received",
+   "fieldtype": "Check",
+   "label": "Is Parcel Received"
   }
  ],
  "is_submittable": 1,
@@ -692,7 +722,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-09-11 20:06:07.189179",
+ "modified": "2024-09-18 22:27:11.946291",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

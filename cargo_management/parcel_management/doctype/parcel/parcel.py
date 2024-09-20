@@ -9,7 +9,18 @@ from .constants import Status, StatusMessage
 from .utils import ParcelStateMachine
 from frappe.utils import nowdate, cstr, cint, flt, comma_or, now
 import json
-
+from erpnext.accounts.utils import (
+	cancel_exchange_gain_loss_journal,
+	get_account_currency,
+	get_balance_on,
+	get_outstanding_invoices,
+)
+from erpnext.accounts.general_ledger import (
+	make_gl_entries,
+	make_reverse_gl_entries,
+	process_gl_map,
+)
+from frappe import _
 import random
 import string
 from erpnext.controllers.accounts_controller import AccountsController
@@ -49,9 +60,11 @@ class Parcel(AccountsController):
 		est_departure: DF.Date | None
 		explained_status: DF.Data | None
 		has_taxes: DF.Check
+		is_parcel_received: DF.Check
 		mode_of_payment: DF.Link | None
 		naming_series: DF.Literal["UN"]
 		net_total: DF.Currency
+		not_arrived: DF.Check
 		notes: DF.SmallText | None
 		order_date: DF.Date | None
 		parcel_price_rule: DF.Link | None
@@ -61,16 +74,17 @@ class Parcel(AccountsController):
 		receiver_name: DF.Link
 		receiver_number: DF.Data | None
 		receivers_card_image: DF.Attach | None
+		receiving_account: DF.Link | None
+		returned_to_sender: DF.Check
 		shipper: DF.Link | None
 		shipper_address: DF.Data | None
 		shipper_card_image: DF.Attach | None
 		shipper_email: DF.Data | None
 		shipper_name: DF.Link
 		shipper_number: DF.Data | None
-		shipping_account: DF.Link | None
 		shipping_amount: DF.Currency
 		signed_by: DF.Data | None
-		status: DF.Literal["Awaiting Receipt", "Awaiting Confirmation", "In Extraordinary Confirmation", "Awaiting Departure", "In Transit", "In Customs", "Sorting", "To Bill", "Unpaid", "For Delivery or Pickup", "Finished", "Cancelled", "Never Arrived", "Returned to Sender"]
+		status: DF.Literal["Awaiting Receipt", "Waiting for Arrival", "Awaiting Confirmation", "In Extraordinary Confirmation", "Awaiting Departure", "In Transit", "In Customs", "Sorting", "To Bill", "Unpaid", "For Delivery or Pickup", "Finished", "Cancelled", "Never Arrived", "Returned to Sender"]
 		total: DF.Currency
 		total_actual_weight: DF.Float
 		total_commission: DF.Currency
@@ -118,6 +132,67 @@ class Parcel(AccountsController):
 		return {}
    # --------------------------------------
 	#@override
+	@frappe.whitelist()
+	def calculate_shipping_amount_by_rule( self,item_code=None, actual_weight=None, length=None ,width=None, height=None):
+		pass
+		
+		# frappe.log(f"Starting calculation with Parcel Price Rule: {self.parcel_price_rule}")
+
+		# if self.parcel_price_rule == 'Volumetric Weight':
+		# 	frappe.log("hi - Inside Volumetric Weight condition")
+		# 	# if length is not None and width is not None and height is not None:
+		# 	# 	try:
+		# 	# 		length = float(length)
+		# 	# 		width = float(width)
+		# 	# 		height = float(height)
+					
+		# 	# 		volume = length * width * height
+					
+		# 	# 		if volume < 10:
+		# 	# 			return 100
+		# 	# 		elif 10 <= volume < 20:
+		# 	# 			return 200
+		# 	# 		elif 20 <= volume < 30:
+		# 	# 			return 300
+		# 	# 		else:
+		# 	# 			return 400
+		# 	# 	except ValueError as e:
+		# 	# 		return f"Error: {str(e)}"
+		# 	# else:
+		# 	# 	return "Error: Length, width, and height are required for volumetric weight calculation."
+		
+		# elif  self.parcel_price_rule == 'Item Group':
+		# 	frappe.log("bye - Inside Item Group condition")
+
+		# 		# item_group = frappe.db.get_value('Item', {'item_code': item_code}, 'item_group')
+
+		# 		# price_rule = frappe.get_all('Parcel Price Rule',
+		# 		# 	filters={'item_group': item_group},
+		# 		# 	fields=['name']
+		# 		# )
+
+		# 		# if price_rule:
+		# 		# 	conditions = frappe.get_all('Parcel Rule Condition',
+		# 		# 		filters={
+		# 		# 			'parent': price_rule[0].name,
+		# 		# 			'from_value': ['<=', actual_weight],
+		# 		# 			'to_value': ['>=', actual_weight]
+		# 		# 		},
+		# 		# 		fields=['shipping_amount']
+		# 		# 	)
+
+		# 		# 	if conditions:
+		# 		# 		shipping_amount = conditions[0].shipping_amount
+		# 		# 		frappe.log(f"Shipping Amount: {shipping_amount}")
+		# 		# 		return shipping_amount
+				
+		# 		# frappe.log("No suitable shipping condition found. Returning 0.")
+		# 		# return 0
+		# else:
+		# 	frappe.log("No suitable shipping condition found. Returning 0.")
+
+				# return "Error: Item code and actual weight are required for item group calculation."
+		
 	def save(self, *args, **kwargs):
 		""" Override def to change validation behaviour. Useful when called from outside a form. """
 
@@ -130,7 +205,70 @@ class Parcel(AccountsController):
 		self.tracking_number = self.tracking_number.strip().upper()  # Only uppercase with no spaces
 		for tracking in self.content:
 			tracking.tracking_number = str(self.tracking_number) + "-" + str(tracking.idx)
+
 			
+# 		self.validate_debit_to_acc()
+# 		for child_row in self.get("content"):
+#     # الوصول إلى الحقول داخل كل صف في child table
+# 			field_item_code = child_row.item_code  # استبدل field_1 باسم الحقل المطلوب
+# 			field_actual_weight = child_row.actual_weight
+
+# 			# تمرير الحقول إلى دالة حساب تكلفة الشحن
+# 			calculate_shipping_amountb(field_item_code, field_actual_weight)
+# # استبدل field_2 باسم الحقل المطلوب
+				
+				# frappe.log(f"Field 1: {field_1_value}, Field 2: {field_2_value}")		# calculate_shipping_amountb()
+
+
+
+		# def before_cancel(self):
+	
+	# def reverse_gl_entries(self):
+	# 	# الحصول على جميع القيود المرتبطة بـ "Parcel"
+	# 	gl_entries = frappe.get_all('GL Entry', filters={'voucher_no': self.name})
+
+	# 	for gl_entry in gl_entries:
+	# 		gl_doc = frappe.get_doc('GL Entry', gl_entry.name)
+			
+	# 		# إنشاء قيد عكسي
+	# 		reversed_entry = frappe.new_doc('GL Entry')
+	# 		reversed_entry.posting_date = gl_doc.posting_date
+	# 		reversed_entry.account = gl_doc.account
+	# 		reversed_entry.debit = gl_doc.credit  # عكس المدين إلى دائن
+	# 		reversed_entry.credit = gl_doc.debit  # عكس الدائن إلى مدين
+	# 		reversed_entry.voucher_type = gl_doc.voucher_type
+	# 		reversed_entry.voucher_no = gl_doc.voucher_no
+	# 		reversed_entry.against = gl_doc.against
+	# 		reversed_entry.remarks = "Reversal of GL Entry {0}".format(gl_doc.name)
+
+	# 		# حفظ القيد العكسي
+	# 		reversed_entry.insert()
+	# 		reversed_entry.submit()
+
+	# 	frappe.msgprint(_("GL Entries have been successfully reversed."))
+
+	# def before_cancel(self):
+	# 	# عكس القيود المحاسبية المرتبطة قبل إلغاء "Parcel"
+	# 	self.reverse_gl_entries()
+
+	def on_cancel(self):
+		self.ignore_linked_doctypes = (
+			"GL Entry",
+			"Stock Ledger Entry",
+			"Payment Ledger Entry",
+			"Repost Payment Ledger",
+			"Repost Payment Ledger Items",
+			"Repost Accounting Ledger",
+			"Repost Accounting Ledger Items",
+			"Unreconcile Payment",
+			"Unreconcile Payment Entries",
+		)
+		super().on_cancel()
+		self.make_gl_entries(cancel=1)
+
+	# هنا تقوم بالإلغاء النهائي للـ Parcel بعد فك الارتباط
+		# frappe.db.set(self, 'status', 'Cancelled')
+		# frappe.msgprint(_("Parcel has been cancelled successfully."))	
 	# def before_save(self):
 	# 	auto_create_invoice = frappe.db.get_single_value("Shipment Settings", "create_invoice")
 
@@ -146,20 +284,29 @@ class Parcel(AccountsController):
 	# 	if self.is_new():
 	# 		self.get_generated_barcode()
 	# 	elif self.has_value_changed('shipper') or self.has_value_changed('tracking_number'):  # Exists and data has changed
+	# 
 	# 		frappe.msgprint("Shipper or Tracking Number has changed, we have requested new data.", indicator='yellow', alert=True)
+	# def before_save(self):
+	# 	"""
+	# 	Automatically set the status to 'Awaiting Departure' before saving the document.
+	# 	"""
+	# 	if self.status != 'Awaiting Departure':
+	# 		self.status = 'Awaiting Departure'
+
+	
 
 	def change_status(self, new_status):
 		"""
-		Validates the current status of the parcel and change it if it's possible.
+			Validates the current status of the parcel and change it if it's possible.
 
-		# Parcel was waiting for receipt, now is mark as delivered. waiting for confirmation.
-		# Parcel was waiting for receipt or confirmation and now is waiting for the departure.
-		# Parcel was not received and not confirmed, but has appear on the warehouse receipt.
+			# Parcel was waiting for receipt, now is mark as delivered. waiting for confirmation.
+			# Parcel was waiting for receipt or confirmation and now is waiting for the departure.
+			# Parcel was not received and not confirmed, but has appear on the warehouse receipt.
 
-		# TODO: Validate this when status is changed on Form-View or List-View
-		"""
-		# psm = ParcelStateMachine(status=self.status)
-		# psm.transition(new_status)
+			# TODO: Validate this when status is changed on Form-View or List-View
+				"""
+		psm = ParcelStateMachine(status=self.status)
+		psm.transition(new_status)
 
 		if (self.status != new_status and \
 			(self.status == 'Awaiting Receipt' and new_status in ['Awaiting Confirmation', 'Returned to Sender']) or \
@@ -182,111 +329,120 @@ class Parcel(AccountsController):
 		# barcode_type = shipment_settings.barcode_type
 		self.barcode = generate_barcode(shipment_settings)
 
-	@property
-	def explained_status(self):
-		""" This returns a detailed explanation of the current status of the Parcel and compatible colors. """
-		# TODO: Python 3.10: Migrate to switch case or Improve performance?
-		# frappe.local.lang = LocaleLanguage.SPANISH  # Little Hack
+	# @property
+	# def explained_status(self):
+	# 	""" This returns a detailed explanation of the current status of the Parcel and compatible colors. """
+	# 	# TODO: Python 3.10: Migrate to switch case or Improve performance?
+	# 	# frappe.local.lang = LocaleLanguage.SPANISH  # Little Hack
 
-		message, color = [], 'blue'  # TODO: Add more colors? Check frappe colors
+	# 	message, color = [], 'blue'  # TODO: Add more colors? Check frappe colors
 
-		match self.status:
-			case Status.AWAITING_RECEIPT:
-				message = [StatusMessage.TRANSPORTATION_NOT_DELIVERED_YET]
+	# 	match self.status:
+	# 		case Status.AWAITING_RECEIPT:
+	# 			message = [StatusMessage.TRANSPORTATION_NOT_DELIVERED_YET]
 
-				if self.carrier_est_delivery:  # The carrier has provided an estimated delivery date
-					est_delivery_diff = frappe.utils.date_diff(None, self.carrier_est_delivery)  # Diff from estimated to today
-					est_delivery_date = frappe.utils.format_date(self.carrier_est_delivery, 'medium')  # readable date
+	# 			if self.carrier_est_delivery:  # The carrier has provided an estimated delivery date
+	# 				est_delivery_diff = frappe.utils.date_diff(None, self.carrier_est_delivery)  # Diff from estimated to today
+	# 				est_delivery_date = frappe.utils.format_date(self.carrier_est_delivery, 'medium')  # readable date
 
-					if est_delivery_diff == 0:  # Delivery is today
-						message.append(StatusMessage.ESTIMATED_DELIVERY_DATE_TODAY)
-					elif est_delivery_diff == -1:  # Delivery is tomorrow
-						message.append(StatusMessage.ESTIMATED_DELIVERY_DATE_TOMORROW)
-					elif est_delivery_diff < 0:  # Delivery is in the next days
-						# message.append('La fecha programada es: {}'.format(est_delivery_date))
-						message.append(StatusMessage.ESTIMATED_DELIVERY_DATE.value.replace('[DATE]', est_delivery_date))
-					else:  # Delivery is late
-						color = 'pink'
-						# message.append('Esta retrasado. Debio de ser entregado el: {}'.format(est_delivery_date))
-						message.append(StatusMessage.DELAYED_DELIVERY_DATE.value.replace('[DATE]', est_delivery_date))
-						message.append(StatusMessage.CONTACT_YOUR_PROVIDER_FOR_INFO)
-				else:
-					color = 'yellow'
-					message.append(StatusMessage.NOT_DELIVERY_DATE_ESTIMATED)
+	# 				if est_delivery_diff == 0:  # Delivery is today
+	# 					message.append(StatusMessage.ESTIMATED_DELIVERY_DATE_TODAY)
+	# 				elif est_delivery_diff == -1:  # Delivery is tomorrow
+	# 					message.append(StatusMessage.ESTIMATED_DELIVERY_DATE_TOMORROW)
+	# 				elif est_delivery_diff < 0:  # Delivery is in the next days
+	# 					# message.append('La fecha programada es: {}'.format(est_delivery_date))
+	# 					message.append(StatusMessage.ESTIMATED_DELIVERY_DATE.value.replace('[DATE]', est_delivery_date))
+	# 				else:  # Delivery is late
+	# 					color = 'pink'
+	# 					# message.append('Esta retrasado. Debio de ser entregado el: {}'.format(est_delivery_date))
+	# 					message.append(StatusMessage.DELAYED_DELIVERY_DATE.value.replace('[DATE]', est_delivery_date))
+	# 					message.append(StatusMessage.CONTACT_YOUR_PROVIDER_FOR_INFO)
+	# 			else:
+	# 				color = 'yellow'
+	# 				message.append(StatusMessage.NOT_DELIVERY_DATE_ESTIMATED)
 
-			case Status.AWAITING_CONFIRMATION:
-				message, color = self._awaiting_confirmation_or_in_extraordinary_confirmation()
-			case Status.IN_EXTRAORDINARY_CONFIRMATION:
-				message, color = self._awaiting_confirmation_or_in_extraordinary_confirmation()
-			case Status.AWAITING_DEPARTURE:
-				# TODO: Add Warehouse Receipt date, # TODO: Add cargo shipment calendar
-				# cargo_shipment = frappe.get_cached_doc('Cargo Shipment', self.cargo_shipment)
+	# 		case Status.AWAITING_CONFIRMATION:
+	# 			message, color = self._awaiting_confirmation_or_in_extraordinary_confirmation()
+	# 		case Status.IN_EXTRAORDINARY_CONFIRMATION:
+	# 			message, color = self._awaiting_confirmation_or_in_extraordinary_confirmation()
+	# 		case Status.AWAITING_DEPARTURE:
+	# 			# TODO: Add Warehouse Receipt date, # TODO: Add cargo shipment calendar
+	# 			# cargo_shipment = frappe.get_cached_doc('Cargo Shipment', self.cargo_shipment)
     
-				# TODO: What if we dont have real delivery date. Or signature
-				if self.carrier_real_delivery:
-					message = [
-						StatusMessage.TRANSPORTER_DELIVERY_DATE.value.replace(
-							'[DATE]',
-							frappe.utils.format_datetime(self.carrier_real_delivery, 'medium')
-						),
-					]
-				if self.signed_by:
-					message.append(StatusMessage.SIGNED_BY.value.replace('[SIGNER]', str(self.signed_by)))
-					# 'Firmado por {}'.format(self.carrier_real_delivery, self.signed_by),
-					# 'Fecha esperada de recepcion en Managua: {}'.format(cargo_shipment.expected_arrival_date),
+	# 			# TODO: What if we dont have real delivery date. Or signature
+	# 			if self.carrier_real_delivery:
+	# 				message = [
+	# 					StatusMessage.TRANSPORTER_DELIVERY_DATE.value.replace(
+	# 						'[DATE]',
+	# 						frappe.utils.format_datetime(self.carrier_real_delivery, 'medium')
+	# 					),
+	# 				]
+	# 			if self.signed_by:
+	# 				message.append(StatusMessage.SIGNED_BY.value.replace('[SIGNER]', str(self.signed_by)))
+	# 				# 'Firmado por {}'.format(self.carrier_real_delivery, self.signed_by),
+	# 				# 'Fecha esperada de recepcion en Managua: {}'.format(cargo_shipment.expected_arrival_date),
 
-				message.append('Embarque: {}'.format(self.cargo_shipment))
+	# 			message.append('Embarque: {}'.format(self.cargo_shipment))
 
-			case Status.IN_TRANSIT:
-				# TODO: Add Departure date and est arrival date
-				if not self.cargo_shipment:
-					return {'message': [StatusMessage.NO_CARGO_SHIPPING], color: 'red'}
+	# 		case Status.IN_TRANSIT:
+	# 			# TODO: Add Departure date and est arrival date
+	# 			if not self.cargo_shipment:
+	# 				return {'message': [StatusMessage.NO_CARGO_SHIPPING], color: 'red'}
 
-				cargo_shipment = frappe.get_cached_doc('Cargo Shipment', self.cargo_shipment)
+	# 			cargo_shipment = frappe.get_cached_doc('Cargo Shipment', self.cargo_shipment)
 
-				color = 'purple'
+	# 			color = 'purple'
 
-				message = [
-					StatusMessage.PACKAGE_IN_TRANSIT_TO_DESTINATION,
-					StatusMessage.DEPARTURE_DATE.value.replace('[DATE]', str(cargo_shipment.departure_date)),
-					StatusMessage.ESTIMATED_RECEPTION_DATE.value.replace('[DATE]', str(cargo_shipment.expected_arrival_date)),
-					StatusMessage.CARGO_SHIPMENT.value.replace('[SHIPMENT]', self.cargo_shipment)
-				]
-			case Status.IN_CUSTOMS:
-				message, color = [StatusMessage.PACKAGE_IN_CUSTOMS], 'gray'
-			case Status.SORTING:
-				message, color = [StatusMessage.PACKAGE_IN_OFFICE_SORTING], 'blue'
-			case Status.TO_BILL:
-				message, color = [StatusMessage.PACKAGE_IN_OFFICE_SORTING], 'blue'
+	# 			message = [
+	# 				StatusMessage.PACKAGE_IN_TRANSIT_TO_DESTINATION,
+	# 				StatusMessage.DEPARTURE_DATE.value.replace('[DATE]', str(cargo_shipment.departure_date)),
+	# 				StatusMessage.ESTIMATED_RECEPTION_DATE.value.replace('[DATE]', str(cargo_shipment.expected_arrival_date)),
+	# 				StatusMessage.CARGO_SHIPMENT.value.replace('[SHIPMENT]', self.cargo_shipment)
+	# 			]
+	# 		case Status.IN_CUSTOMS:
+	# 			message, color = [StatusMessage.PACKAGE_IN_CUSTOMS], 'gray'
+	# 		case Status.SORTING:
+	# 			message, color = [StatusMessage.PACKAGE_IN_OFFICE_SORTING], 'blue'
+	# 		case Status.TO_BILL:
+	# 			message, color = [StatusMessage.PACKAGE_IN_OFFICE_SORTING], 'blue'
 
-			case Status.UNPAID:
-				message, color = [StatusMessage.PACKAGE_READY], 'blue'
-			case  Status.FOR_DELIVERY_OR_PICKUP:
-				message, color = [StatusMessage.PACKAGE_READY], 'blue'
+	# 		case Status.UNPAID:
+	# 			message, color = [StatusMessage.PACKAGE_READY], 'blue'
+	# 		case  Status.FOR_DELIVERY_OR_PICKUP:
+	# 			message, color = [StatusMessage.PACKAGE_READY], 'blue'
 
-			case Status.FINISHED:
-				message, color = [StatusMessage.PACKAGE_FINISHED], 'green'  # TODO: Show invoice, delivery and payment details.
-			case Status.CANCELLED:
-				message, color = [StatusMessage.CONTACT_AGENT_FOR_PACKAGE_INFO], 'orange'
-			case Status.NEVER_ARRIVED:
-				message, color = [StatusMessage.PACKAGE_NEVER_ARRIVED], 'red'
-				message.append(StatusMessage.CONTACT_FOR_MORE_INFO)
-			case Status.RETURNED_TO_SENDER:
-				message, color = [StatusMessage.PACKAGE_RETURNED], 'red'
-				message.append(StatusMessage.CONTACT_FOR_MORE_INFO)
+	# 		case Status.FINISHED:
+	# 			message, color = [StatusMessage.PACKAGE_FINISHED], 'green'  # TODO: Show invoice, delivery and payment details.
+	# 		case Status.CANCELLED:
+	# 			message, color = [StatusMessage.CONTACT_AGENT_FOR_PACKAGE_INFO], 'orange'
+	# 		case Status.NEVER_ARRIVED:
+	# 			message, color = [StatusMessage.PACKAGE_NEVER_ARRIVED], 'red'
+	# 			message.append(StatusMessage.CONTACT_FOR_MORE_INFO)
+	# 		case Status.RETURNED_TO_SENDER:
+	# 			message, color = [StatusMessage.PACKAGE_RETURNED], 'red'
+	# 			message.append(StatusMessage.CONTACT_FOR_MORE_INFO)
 
-			case _:
-				...
+	# 		case _:
+	# 			...
 
-		return {'message': message, 'color': color}
+	# 	return {'message': message, 'color': color}
 
 
-	def validate(self):
-		self.validate_debit_to_acc()
+	# def validate(self):
+	# 	self.validate_debit_to_acc()
 
 
 	def on_submit(self):
 		self.make_gl_entries()
+		self.mark_parcel_as_never_arrived()
+		self.mark_parcel_as_returned_to_sender()
+		self.mark_parcel_as_finished_to_sender()
+
+
+	def on_change(self):
+		self.mark_parcel_as_never_arrived()
+		self.mark_parcel_as_returned_to_sender()
+		self.mark_parcel_as_finished_to_sender()
 
 	@frappe.whitelist()
 	def calculate_total_amount(doc):
@@ -296,14 +452,26 @@ class Parcel(AccountsController):
 
 
 
-	def make_gl_entries(self, gl_entries=None, from_repost=False):
+	def make_gl_entries(self, gl_entries=None, cancel=0, from_repost=False):
 		from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
 		if not gl_entries:
 			gl_entries = self.get_gl_entries()
 
 		if gl_entries:
 
-			if self.docstatus == 1:
+			# if self.docstatus == 1:
+			# 	make_gl_entries(
+			# 		gl_entries,
+			# 		merge_entries=False,
+			# 		from_repost=from_repost,
+			# 	)
+
+			if cancel:
+				cancel_exchange_gain_loss_journal(frappe._dict(doctype=self.doctype, name=self.name))
+				make_reverse_gl_entries(gl_entries, partial_cancel=True)
+
+
+			else :
 				make_gl_entries(
 					gl_entries,
 					merge_entries=False,
@@ -348,7 +516,8 @@ class Parcel(AccountsController):
 					"party": self.shipper_name,
 					"posting_date": self.order_date,
 					"against": self.agent_account,
-					"debit": self.total - self.total_commission,
+					"credit": self.total,
+
 					# "debit_in_account_currency": self.total
 					# if self.party_account_currency == self.company_currency
 					# else grand_total,
@@ -364,10 +533,11 @@ class Parcel(AccountsController):
 		gl_entries.append(
 			self.get_gl_dict(
 				{
-					"account": self.agent_account,
+					"account": self.receiving_account,
 					"posting_date": self.order_date,
+
 					"against": self.debit_to,
-					"credit": self.total,
+					"debit": self.total - self.total_commission,
 					# "credit_in_account_currency": self.total,
 					# "against_voucher": self.name,
 					# "against_voucher_type": self.doctype,
@@ -384,12 +554,15 @@ class Parcel(AccountsController):
 
 		# إذا كانت الإعدادات تشير إلى أن العمولة يجب أن تُحسب
 		if settings != 'From Warehouse':
-			if self.shipping_account and self.total_commission:
+			if self.agent_account and self.total_commission:
 				gl_entries.append(
 					self.get_gl_dict(
 						{
-							"account": self.shipping_account,
+							"account": self.agent_account,
 							"posting_date": self.order_date,
+							"party_type": "Agent",
+                            "party": self.agent,
+
 							"against": self.debit_to,
 							"debit": self.total_commission,
 							# "credit_in_account_currency": self.total,
@@ -401,6 +574,24 @@ class Parcel(AccountsController):
 						item=self,
 					)
 				)
+
+	def mark_parcel_as_never_arrived(self):
+		if self.not_arrived and self.status != 'Never Arrived':
+			self.db_set('status', 'Never Arrived', update_modified=False)
+
+			#frappe.msgprint(_("The parcel {0} has been marked as 'Never Arrived'.").format(self.name))
+
+	def mark_parcel_as_finished_to_sender(self):
+		if self.is_parcel_received and self.status != 'Finished':
+			self.db_set('status', 'Finished', update_modified=False)
+
+			
+	def mark_parcel_as_returned_to_sender(self):
+		if self.returned_to_sender and self.status != 'Returned to Sender':
+				self.db_set('status', 'Returned to Sender', update_modified=False)
+
+			#frappe.msgprint(_("The parcel {0} has been marked as 'Never Arrived'.").format(self.name))
+
 
 
 		# def make_parcel_gl_entries(self, gl_entries):
@@ -632,3 +823,128 @@ def calculate_isbn_13_check_digit(isbn_13):
     total = sum(int(digit) * (1 if i % 2 == 0 else 3) for i, digit in enumerate(isbn_13))
     check_digit = 10 - (total % 10)
     return check_digit if check_digit != 10 else 0
+
+@frappe.whitelist()
+def get_item_price(item_code, price_list=None):
+    filters = {'item_code': item_code}
+    if price_list:
+        filters['price_list'] = price_list
+    
+    item_price = frappe.get_all('Item Price', filters=filters, fields=['price_list_rate'], order_by='valid_from desc', limit=1)
+    
+    if item_price:
+        return item_price[0].price_list_rate
+    else:
+        frappe.throw(f"Price not found for item {item_code}")
+@frappe.whitelist()
+
+# def calculate_shipping_amount(length, width, height):
+#     try:
+#         # تحويل النصوص إلى أعداد
+#         length = float(length)
+#         width = float(width)
+#         height = float(height)
+        
+#         # حساب الحجم
+#         volume = length * width * height
+        
+#         # قواعد التسعير بالحجم
+#         if volume < 10:
+#             return 100
+#         elif 10 <= volume < 20:
+#             return 200
+#         elif 20 <= volume < 30:
+#             return 300
+#         else:
+#             return 400
+#     except ValueError as e:
+#         return f"Error: {str(e)}"
+    
+	
+@frappe.whitelist()
+def calculate_shipping_amount_by_item_group( item_code=None, actual_weight=None, length=None ,width=None, height=None):
+    item_group = frappe.db.get_value('Item', {'item_code': item_code}, 'item_group')
+
+    price_rule = frappe.get_all('Parcel Price Rule',
+        filters={'item_group': item_group},
+        fields=['name']
+    )
+
+    if price_rule:
+        conditions = frappe.get_all('Parcel Rule Condition',
+            filters={
+                'parent': price_rule[0].name,
+                'from_value': ['<=', actual_weight],  # استخدم actual_weight مباشرة
+                'to_value': ['>=', actual_weight]     # استخدم actual_weight مباشرة
+            },
+            fields=['shipping_amount']
+        )
+
+        if conditions:
+            shipping_amount = conditions[0].shipping_amount
+            frappe.log(f"Shipping Amount: {shipping_amount}")  # طباعة القيمة المرجعة
+            return shipping_amount
+    
+    frappe.log("No suitable shipping condition found. Returning 0.")  # طباعة إذا لم يتم العثور على قاعدة مناسبة
+    return 0
+@frappe.whitelist()
+def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None, actual_weight=None, length=None ,width=None, height=None):
+    
+    
+    if shipping_rule == 'Volumetric Weight':
+        
+        if length is not None and width is not None and height is not None:
+            try:
+                length = float(length)
+                width = float(width)
+                height = float(height)
+                
+                volume = length * width * height
+                
+                if volume < 10:
+                    return 100
+                elif 10 <= volume < 20:
+                    return 200
+                elif 20 <= volume < 30:
+                    return 300
+                else:
+                    return 400
+            except ValueError as e:
+                return f"Error: {str(e)}"
+        else:
+            return "Error: Length, width, and height are required for volumetric weight calculation."
+    
+    elif  shipping_rule == 'Item Group':
+            item_group = frappe.db.get_value('Item', {'item_code': item_code}, 'item_group')
+
+            price_rule = frappe.get_all('Parcel Price Rule',
+                filters={'item_group': item_group},
+                fields=['name']
+            )
+
+            if price_rule:
+                conditions = frappe.get_all('Parcel Rule Condition',
+                    filters={
+                        'parent': price_rule[0].name,
+                        'from_value': ['<=', actual_weight],
+                        'to_value': ['>=', actual_weight]
+                    },
+                    fields=['shipping_amount']
+                )
+
+                if conditions:
+                    shipping_amount = conditions[0].shipping_amount
+                    frappe.log(f"Shipping Amount: {shipping_amount}")
+                    return shipping_amount
+            
+            frappe.log("No suitable shipping condition found. Returning 0.")
+            return 0
+    elif  shipping_rule == 'Actual Weight':
+          actual_weight = float(actual_weight)
+          return actual_weight
+    elif  shipping_rule == 'Fixed':
+          fixed=frappe.get_value('Parcel Price Rule',shipping_rule,'shipping_amount')
+          return fixed
+    else:
+            return "Error: Item code and actual weight are required for item group calculation."
+    

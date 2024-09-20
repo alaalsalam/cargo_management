@@ -74,16 +74,15 @@
    "search_index": 1
   },
   {
+   "allow_on_submit": 1,
    "bold": 1,
-   "depends_on": "eval: !doc.__islocal",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Draft\nOpen\nAwaiting Departure\nIn Transit\nSorting\nFinished",
-   "read_only": 1,
+   "options": "Open\nAwaiting Departure\nIn Transit\nSorting\nFinished",
    "reqd": 1,
    "search_index": 1
   },
@@ -311,8 +310,7 @@
   {
    "fieldname": "total_shipment_amount",
    "fieldtype": "Currency",
-   "label": "Total Shipment Amount",
-   "read_only": 1
+   "label": "Total Shipment Amount"
   },
   {
    "collapsible": 1,
@@ -337,7 +335,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-10 02:49:48.360487",
+ "modified": "2024-09-16 21:11:14.755865",
  "modified_by": "Administrator",
  "module": "Warehouse Management",
  "name": "Warehouse Receipt",

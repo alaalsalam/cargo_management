@@ -20,6 +20,10 @@
   "create_invoice",
   "is_submit",
   "commission",
+  "section_break_kuqq",
+  "in_transit",
+  "column_break_tpoh",
+  "in_customs",
   "accounting_dimension_section",
   "accounting_dimension",
   "default_accounts_section",
@@ -133,12 +137,32 @@
    "fieldtype": "Select",
    "label": "Commission",
    "options": "From Parcel\nFrom Warehouse"
+  },
+  {
+   "fieldname": "section_break_kuqq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "in_transit",
+   "fieldtype": "Check",
+   "label": "In Transit"
+  },
+  {
+   "fieldname": "column_break_tpoh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "in_customs",
+   "fieldtype": "Check",
+   "label": "In Customs"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-09-11 00:36:21.627327",
+ "modified": "2024-09-20 04:03:02.625596",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Shipment Settings",

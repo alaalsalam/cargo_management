@@ -38,7 +38,7 @@ class ParcelPriceRule(Document):
 		from frappe.types import DF
 
 		account: DF.Link
-		calculate_based_on: DF.Literal["Fixed", "Actual Weight", "Volumetric Weight"]
+		calculate_based_on: DF.Literal["Fixed", "Actual Weight", "Volumetric Weight", "Item Group"]
 		company: DF.Link
 		conditions: DF.Table[ParcelRuleCondition]
 		cost_center: DF.Link

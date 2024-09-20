@@ -7,7 +7,7 @@ frappe.ui.form.on("Agent Group", {
 			return {
 				filters: {
 					root_type: "Liability",
-					account_type: "Payable",
+					//account_type: "Payable",
 					company: locals[cdt][cdn].company,
 					is_group: 0,
 				},
