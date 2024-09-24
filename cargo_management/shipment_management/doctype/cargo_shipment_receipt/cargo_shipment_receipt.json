@@ -38,6 +38,7 @@
   },
   {
    "allow_in_quick_entry": 1,
+   "allow_on_submit": 1,
    "columns": 2,
    "default": "Awaiting Receipt",
    "depends_on": "eval: !doc.__islocal",
@@ -129,7 +130,7 @@
    "link_fieldname": "custom_cargo_shipment_receipt"
   }
  ],
- "modified": "2024-09-17 04:20:19.767134",
+ "modified": "2024-09-23 00:22:17.594786",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Cargo Shipment Receipt",

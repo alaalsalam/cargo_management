@@ -160,6 +160,13 @@ doc_events = {
 		"on_change": "cargo_management.parcel_selling.utils.sales_invoice_on_update_after_submit"
 	}
 }
+scheduler_events = {
+    "daily": [
+        "cargo_management.shipment_management.doctype.cargo_shipment.cargo_shipment.update_cargo_status"
+    ]
+}
+
+
 
 # Scheduled Tasks
 # ---------------

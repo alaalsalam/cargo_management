@@ -11,7 +11,8 @@ frappe.listview_settings['Cargo Shipment'] = {
 		'Awaiting Departure': 'yellow',
 		'In Transit': 'purple',
 		'Sorting': 'green',
-		'Finished': 'darkgrey',
+		'Completely Finished': 'green',
+		'Partially Finished': 'cyan',
 		'Waiting for Arrival':'blue',
 	}[doc.status], 'status,=,' + doc.status],
 

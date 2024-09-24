@@ -25,27 +25,64 @@ frappe.ui.form.on('Cargo Shipment', {
 			}
 		});
 		
+		
 	
 	
 		
-		let state = frm.doc.workflow_state;
-		let progress = 0;
 		
-		if (state === 'Awaiting Departure') {
-			progress = 25;
-		} else if (state === 'In Transit') {
-			progress = 50;
-		} else if (state === 'Sorting') {
-			progress = 75;
-		} else if (state === 'Finished') {
-			progress = 100;
-		}
-
-		frm.dashboard.add_progress('Shipment Progress', progress);
-
-
 	}
 });
+frappe.ui.form.on('Cargo Shipment', {
+    before_save: function(frm) {
+        let status = frm.doc.status;
+
+        // تحديد حالة workflow_state بناءً على حالة status
+        if (status === 'Awaiting Departure') {
+            frm.set_value('workflow_state', 'Awaiting Departure');
+        } else if (status === 'In Transit') {
+            frm.set_value('workflow_state', 'In Transit');
+        } else if (status === 'Sorting') {
+            frm.set_value('workflow_state', 'Sorting');
+        } else if (status === 'Finished') {
+            frm.set_value('workflow_state', 'Finished');
+        } else if (status === 'Waiting for Arrival') {
+            frm.set_value('workflow_state', 'Waiting for Arrival');
+		} else if (status === 'Partially Finished') {
+            frm.set_value('workflow_state', 'Partially Finished');
+		} else if (status === 'Completely Finished') {
+            frm.set_value('workflow_state', 'Completely Finished');
+        	
+        
+        }
+		
+    },
+
+    refresh: function(frm) {
+        let state = frm.doc.workflow_state;
+        let progress = 0;
+
+        // تحديد التقدم بناءً على حالة workflow_state
+        if (state === 'Awaiting Departure') {
+            progress = 25;
+        } else if (state === 'In Transit') {
+            progress = 60;
+        } else if (state === 'Sorting') {
+            progress = 75;
+        } else if (state === 'Completely Finished') {
+            progress = 100;
+        } else if (state === 'Waiting for Arrival') {
+            progress = 50; 
+		} else if (state === 'Partially Finished') {
+            progress = 90; 	 // يمكن تخصيص قيمة التقدم لحالة "Waiting for Arrival"
+        }
+
+        // عرض شريط التقدم في dashboard
+        frm.dashboard.add_progress('Shipment Progress', progress);
+    }
+});
+
+
+
 
 frappe.ui.form.on('Cargo Shipment', {
 

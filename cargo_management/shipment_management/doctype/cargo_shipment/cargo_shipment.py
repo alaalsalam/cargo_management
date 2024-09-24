@@ -5,6 +5,8 @@ from frappe.model.document import Document
 from frappe.utils import nowdate, cstr, cint, flt, comma_or, now
 import json
 from frappe import _
+from frappe.utils import nowdate
+
 
 
 class CargoShipment(Document):
@@ -26,9 +28,9 @@ class CargoShipment(Document):
         currency: DF.Link
         customs_amount: DF.Currency
         customs_arrival_date: DF.Date | None
-        customs_supplier: DF.Link
+        customs_supplier: DF.Link | None
         departure_date: DF.Date
-        estimated_arrival_date: DF.Date
+        estimated_arrival_date: DF.Date | None
         estimated_gross_weight_by_carriers_in_pounds: DF.Float
         estimated_gross_weight_by_warehouse_in_pounds: DF.Float
         expected_arrival_date: DF.Date | None
@@ -40,12 +42,12 @@ class CargoShipment(Document):
         reservation_number: DF.Int
         scan_barcode: DF.Data | None
         shipping_amount: DF.Currency
-        status: DF.Literal["Awaiting Departure", "Waiting for Arrival", "In Transit", "Sorting", "Finished"]
+        status: DF.Literal["Awaiting Departure", "Waiting for Arrival", "In Transit", "Sorting", "Completely Finished", "Partially Finished"]
         supplier: DF.Link
         total: DF.Currency
         total_actual_weight: DF.Float
         total_qty: DF.Int
-        transit_supplier: DF.Link
+        transit_supplier: DF.Link | None
         transportation: DF.Literal["Sea", "Air"]
         warehouse_lines: DF.Table[CargoShipmentWarehouse]
     # end: auto-generated types
@@ -259,6 +261,7 @@ class CargoShipment(Document):
             
     #     frappe.db.commit()
 
+   
 
 
 
@@ -503,5 +506,20 @@ def create_purchase_invoice(doc, rows):
 #             parcels.append(receipt.parcel)
     
 #     return parcels
+@frappe.whitelist()
+def update_cargo_status():
+    # الحصول على جميع سجلات الـ cargo حيث departure_date هو اليوم
+    cargoes = frappe.get_all('Cargo Shipment', filters={'departure_date': nowdate()}, fields=['name', 'status'])
+
+    for cargo in cargoes:
+        # فحص إذا لم تكن الحالة Waiting for Arrival بالفعل
+        if cargo.status != 'Waiting for Arrival':
+            doc = frappe.get_doc('Cargo Shipment', cargo.name)
+            doc.status = 'Waiting for Arrival'
+            doc.save()
+            frappe.db.commit()  # تأكيد التغييرات في قاعدة البيانات
+            frappe.msgprint(f"تم تحديث حالة الشحنة {doc.name} إلى 'Waiting for Arrival'")
+
+
 
 

@@ -580,7 +580,7 @@ frappe.ui.form.on('Parcel', {
     },
 	calculate_rate_from_commission: function(frm) {
 		if (!frm.doc.total) {
-			frappe.msgprint(__('Please enter the total amount before calculating the commission rate.'));
+			// frappe.msgprint(__('Please enter the total amount before calculating the commission rate.'));
 			return;
 		}
         frappe.call({
@@ -600,7 +600,7 @@ frappe.ui.form.on('Parcel', {
         let total_amount = 0;
         if (frm.doc.content.length > 0) {
             frm.doc.content.forEach(function (row) {
-                total_amount += row.amount || 0;
+                total_amount += row.amount;
             });
         }
 	
@@ -614,7 +614,7 @@ frappe.ui.form.on('Parcel', {
 		let shipping_amount = 0;
 		if (frm.doc.content.length > 0) {
 			frm.doc.content.forEach(function (row) {
-				shipping_amount += row.rate || 0;
+				shipping_amount += row.rate;
 			});
 		} frm.set_value('shipping_amount', shipping_amount);
 		console.log("hi ");

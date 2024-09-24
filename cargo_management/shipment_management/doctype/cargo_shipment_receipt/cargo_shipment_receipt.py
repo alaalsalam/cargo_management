@@ -6,7 +6,6 @@ class CargoShipmentReceipt(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
-
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
@@ -71,26 +70,49 @@ class CargoShipmentReceipt(Document):
 		# تأكيد التغييرات في قاعدة البيانات
 		frappe.db.commit()
 		
-	def In_transit(self):
-			frappe.msgprint(f"تم تحديث حالة  إلى 'In Transit'")
+	# def In_transit(self):
+	# 		frappe.msgprint(f"تم تحديث حالة  إلى 'In Transit'")
 
-			# تحديث حالة cargo_shipment إلى In Transit عند الحفظ
-			if self.cargo_shipment:
-				cargo_shipment = frappe.get_doc('Cargo Shipment', self.cargo_shipment)
-				cargo_shipment.status = "In Transit"
-				cargo_shipment.save()
-				frappe.msgprint(f"تم تحديث حالة {cargo_shipment.name} إلى 'In Transit'")
+	# 		# تحديث حالة cargo_shipment إلى In Transit عند الحفظ
+	# 		if self.cargo_shipment:
+	# 			cargo_shipment = frappe.get_doc('Cargo Shipment', self.cargo_shipment)
+	# 			cargo_shipment.status = "In Transit"
+	# 			cargo_shipment.save()
+	# 			frappe.msgprint(f"تم تحديث حالة {cargo_shipment.name} إلى 'In Transit'")
 
 			
+	def In_transit(self):
+		if self.cargo_shipment:
+			cargo_shipment = frappe.get_doc('Cargo Shipment', self.cargo_shipment)
+
+			# جلب جميع الطرود المرتبطة بـ Cargo Shipment
+			all_parcels = frappe.get_all('Cargo Shipment Line', filters={'parent': cargo_shipment.name}, fields=['package'])
+
+			# جلب جميع الطرود المستلمة في Cargo Shipment Receipt
+			received_parcels = frappe.get_all('Cargo Shipment Receipt Line', filters={'parent': self.name}, fields=['package'])
+
+			# استخراج قيم الحقول package من كل طرد
+			all_parcel_packages = {parcel['package'] for parcel in all_parcels}
+			received_parcel_packages = {parcel['package'] for parcel in received_parcels}
+
+			# التحقق من مطابقة الطرود
+			if all_parcel_packages == received_parcel_packages:
+				cargo_shipment.status = "Completely Finished"
+				frappe.msgprint(f"تم تحديث حالة {cargo_shipment.name} إلى 'منتهية بالكامل'")
+			else:
+				cargo_shipment.status = "Partially Finished"
+				frappe.msgprint(f"تم تحديث حالة {cargo_shipment.name} إلى 'منتهية جزئيا'")
+			cargo_shipment.save()
+
 
 	def before_save(self):
 		# تحقق من بيانات الجمارك أو النقل
 
-		if self.delivery_for_customer:
-			frappe.msgprint(f"Delivery for Customer is checked, updating status to For Delivery or Pickup")  # للتصحيح
-			self.update_parcel_status('Sorting')
-		else:  # إذا لم تكن هناك بيانات مضافة
-			frappe.msgprint(f"No For Delivery or Pickup")  # للتصحيح
+		# if self.delivery_for_customer:
+		# 	frappe.msgprint(f"Delivery for Customer is checked, updating status to For Delivery or Pickup")  # للتصحيح
+			self.update_parcel_status('Finished')
+		# else:  # إذا لم تكن هناك بيانات مضافة
+		# 	frappe.msgprint(f"No For Delivery or Pickup")  # للتصحيح
 		
 
 	def on_submit(self):

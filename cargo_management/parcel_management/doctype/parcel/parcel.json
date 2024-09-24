@@ -135,6 +135,7 @@
    "label": "Status",
    "no_copy": 1,
    "options": "Awaiting Receipt\nWaiting for Arrival\nAwaiting Confirmation\nIn Extraordinary Confirmation\nAwaiting Departure\nIn Transit\nIn Customs\nSorting\nTo Bill\nUnpaid\nFor Delivery or Pickup\nFinished\nCancelled\nNever Arrived\nReturned to Sender",
+   "read_only": 1,
    "search_index": 1
   },
   {
@@ -722,7 +723,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-09-18 22:27:11.946291",
+ "modified": "2024-09-23 01:36:34.027047",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

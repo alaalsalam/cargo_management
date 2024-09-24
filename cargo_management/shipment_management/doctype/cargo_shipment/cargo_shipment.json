@@ -67,7 +67,7 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Awaiting Departure\nWaiting for Arrival\nIn Transit\nSorting\nFinished",
+   "options": "Awaiting Departure\nWaiting for Arrival\nIn Transit\nSorting\nCompletely Finished\nPartially Finished",
    "reqd": 1,
    "search_index": 1
   },
@@ -280,8 +280,7 @@
   {
    "fieldname": "estimated_arrival_date",
    "fieldtype": "Date",
-   "label": "Estimated Arrival Date",
-   "reqd": 1
+   "label": "Estimated Arrival Date"
   },
   {
    "fieldname": "actual_arrival_date",
@@ -292,21 +291,18 @@
    "fieldname": "transit_supplier",
    "fieldtype": "Link",
    "label": "Transit Supplier",
-   "options": "Supplier",
-   "reqd": 1
+   "options": "Supplier"
   },
   {
    "fieldname": "customs_amount",
    "fieldtype": "Currency",
-   "label": "Customs Amount",
-   "reqd": 1
+   "label": "Customs Amount"
   },
   {
    "fieldname": "customs_supplier",
    "fieldtype": "Link",
    "label": "Customs Supplier",
-   "options": "Supplier",
-   "reqd": 1
+   "options": "Supplier"
   },
   {
    "collapsible": 1,
@@ -327,12 +323,14 @@
   {
    "fieldname": "cargo_shipment_no",
    "fieldtype": "Int",
-   "label": "Cargo Shipment No"
+   "label": "Cargo Shipment No",
+   "reqd": 1
   },
   {
    "fieldname": "reservation_number",
    "fieldtype": "Int",
-   "label": "Reservation Number"
+   "label": "Reservation Number",
+   "reqd": 1
   },
   {
    "collapsible": 1,
@@ -372,7 +370,7 @@
    "link_fieldname": "custom_cargo_shipment"
   }
  ],
- "modified": "2024-09-20 04:03:19.992006",
+ "modified": "2024-09-23 01:25:21.244816",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Cargo Shipment",
