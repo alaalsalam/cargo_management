@@ -41,6 +41,7 @@
   "est_delivery_1",
   "est_delivery_2",
   "currency",
+  "cost_center",
   "content_section",
   "content",
   "create_invoice",
@@ -64,6 +65,12 @@
   "tracking_number",
   "naming_series",
   "has_taxes",
+  "additional_discount_section",
+  "apply_additional_discount_on",
+  "discount_account",
+  "column_break_ylxh",
+  "additional_discount_percentage",
+  "additional_discount_amount",
   "additional_data_tab",
   "additional_data_from_carrier_section",
   "carrier_est_delivery",
@@ -517,8 +524,7 @@
    "fieldname": "net_total",
    "fieldtype": "Currency",
    "label": "Net Total",
-   "options": "currency",
-   "read_only": 1
+   "options": "currency"
   },
   {
    "fieldname": "parcel_price_rule",
@@ -693,6 +699,45 @@
    "fieldname": "is_parcel_received",
    "fieldtype": "Check",
    "label": "Is Parcel Received"
+  },
+  {
+   "fieldname": "additional_discount_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Discount"
+  },
+  {
+   "default": "Grand Total",
+   "fieldname": "apply_additional_discount_on",
+   "fieldtype": "Select",
+   "label": "Apply Additional Discount On",
+   "options": "\nGrand Total\nNet Total"
+  },
+  {
+   "fieldname": "discount_account",
+   "fieldtype": "Link",
+   "label": "Discount Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "additional_discount_percentage",
+   "fieldtype": "Float",
+   "label": "Additional Discount Percentage"
+  },
+  {
+   "fieldname": "additional_discount_amount",
+   "fieldtype": "Currency",
+   "label": "Additional Discount Amount"
+  },
+  {
+   "fieldname": "column_break_ylxh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center",
+   "reqd": 1
   }
  ],
  "is_submittable": 1,
@@ -723,7 +768,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-09-23 01:36:34.027047",
+ "modified": "2024-09-27 02:50:49.177430",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

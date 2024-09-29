@@ -24,7 +24,11 @@
   "invoice",
   "column_break_pmkm",
   "rate",
-  "amount"
+  "amount",
+  "section_break_kjdi",
+  "net_rate",
+  "column_break_zbin",
+  "net_amount"
  ],
  "fields": [
   {
@@ -168,11 +172,11 @@
    "allow_in_quick_entry": 1,
    "columns": 1,
    "fieldname": "color",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Color",
    "max_height": "7rem",
-   "options": "\n\u0627\u0628\u064a\u0636\n\u0627\u0633\u0648\u062f\n\u0627\u062d\u0645\u0631\n\u0627\u0635\u0641\u0631\n\u0627\u062e\u0636\u0631\n\u0627\u0632\u0631\u0642\n\u0628\u0646\u064a\n\u062e\u0634\u0628\u064a"
+   "options": "Color"
   },
   {
    "fieldname": "invoice",
@@ -192,11 +196,29 @@
    "in_list_view": 1,
    "label": "Amount",
    "reqd": 1
+  },
+  {
+   "fieldname": "section_break_kjdi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "net_rate",
+   "fieldtype": "Currency",
+   "label": "Net Rate"
+  },
+  {
+   "fieldname": "column_break_zbin",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "net_amount",
+   "fieldtype": "Currency",
+   "label": "Net Amount"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-09-20 02:54:07.010769",
+ "modified": "2024-09-27 01:05:28.270793",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel Content",

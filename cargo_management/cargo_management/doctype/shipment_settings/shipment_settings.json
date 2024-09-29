@@ -18,8 +18,9 @@
   "cash_or_bank_account_group",
   "barcode_type",
   "create_invoice",
-  "is_submit",
   "commission",
+  "enable_discount_accounting_for_parcel",
+  "is_submit",
   "section_break_kuqq",
   "in_transit",
   "column_break_tpoh",
@@ -157,12 +158,18 @@
    "fieldname": "in_customs",
    "fieldtype": "Check",
    "label": "In Customs"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_discount_accounting_for_parcel",
+   "fieldtype": "Check",
+   "label": "Enable Discount Accounting for Parcel"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-09-20 04:03:02.625596",
+ "modified": "2024-09-26 01:56:30.324945",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Shipment Settings",

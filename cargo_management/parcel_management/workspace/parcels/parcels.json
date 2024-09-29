@@ -9,7 +9,7 @@
  "hide_custom": 0,
  "icon": "stock",
  "idx": 0,
- "is_hidden": 0,
+ "is_hidden": 1,
  "label": "Parcels",
  "links": [
   {
@@ -246,7 +246,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-08-27 20:39:05.451907",
+ "modified": "2024-09-27 15:53:23.871917",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcels",
@@ -256,7 +256,7 @@
  "public": 1,
  "quick_lists": [],
  "roles": [],
- "sequence_id": 1.0,
+ "sequence_id": 2.0,
  "shortcuts": [
   {
    "color": "Yellow",

@@ -335,10 +335,11 @@
    "link_to": "Customer Acquisition and Loyalty",
    "link_type": "Report",
    "onboard": 0,
+   "report_ref_doctype": "Customer",
    "type": "Link"
   }
  ],
- "modified": "2024-08-27 22:22:43.556844",
+ "modified": "2024-09-27 15:53:25.525462",
  "modified_by": "Administrator",
  "module": "Parcel Selling",
  "name": "Accounting Shipping",
@@ -373,7 +374,7 @@
    "role": "Shipping Manager"
   }
  ],
- "sequence_id": 15.0,
+ "sequence_id": 25.0,
  "shortcuts": [
   {
    "doc_view": "",

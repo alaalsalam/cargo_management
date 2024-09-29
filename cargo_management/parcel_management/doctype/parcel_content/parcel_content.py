@@ -12,13 +12,15 @@ class ParcelContent(Document):
 
 		actual_weight: DF.Float
 		amount: DF.Currency
-		color: DF.Literal["", "\u0627\u0628\u064a\u0636", "\u0627\u0633\u0648\u062f", "\u0627\u062d\u0645\u0631", "\u0627\u0635\u0641\u0631", "\u0627\u062e\u0636\u0631", "\u0627\u0632\u0631\u0642", "\u0628\u0646\u064a", "\u062e\u0634\u0628\u064a"]
+		color: DF.Link | None
 		description: DF.SmallText | None
 		height: DF.Int
 		import_rate: DF.Float
 		invoice: DF.Link | None
 		item_code: DF.Link | None
 		length: DF.Int
+		net_amount: DF.Currency
+		net_rate: DF.Currency
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data

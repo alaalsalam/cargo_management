@@ -1,30 +1,31 @@
 frappe.ui.form.on('Parcel', {
-    refresh: function(frm) {
-        frappe.call({
-            method: 'frappe.client.get_value',
-            args: {
-                doctype: 'Shipment Settings',
-                fieldname: 'commission'        
-            },
-            callback: function(r) {
-                if (r.message && r.message.commission) {
-                    let commission_type = r.message.commission;
+    // refresh: function(frm) {
+    //     frappe.call({
+    //         method: 'frappe.client.get_value',
+    //         args: {
+    //             doctype: 'Shipment Settings',
+    //             fieldname: 'commission'        
+    //         },
+    //         callback: function(r) {
+    //             if (r.message && r.message.commission) {
+    //                 let commission_type = r.message.commission;
                     
-                    if (commission_type === 'From Warehouse') {
-                        frm.set_df_property('commission_section', 'hidden', 1);
-                    } else {
-                        frm.set_df_property('commission_section', 'hidden', 0);
+    //                 if (commission_type === 'From Warehouse') {
+    //                     frm.set_df_property('commission_section', 'hidden', 1);
+    //                 } else {
+    //                     frm.set_df_property('commission_section', 'hidden', 0);
                         
-                        frm.collapse_section('commission_section');
-                    }
-                } else {
-                    frm.set_df_property('commission_section', 'hidden', 0);
+    //                     frm.collapse_section('commission_section');
+    //                 }
+    //             } else {
+    //                 frm.set_df_property('commission_section', 'hidden', 0);
                     
-                    frm.collapse_section('commission_section');
-                }
-            }
-        });
-    },
+    //                 frm.collapse_section('commission_section');
+    //             }
+    //         }
+    //     });
+    // },
+
 	mode_of_payment: function(frm) {
 		if (!frm.doc.company) {
 			frappe.msgprint(__('Please enter the Company name.'));
@@ -45,84 +46,7 @@ frappe.ui.form.on('Parcel', {
 			});
 		}
 	},
-});
-
-frappe.ui.form.on('Parcel Content', {
-	item_code: function(frm, cdt, cdn) {
-		frm.trigger('calculate_commission');
-		frm.trigger('calculate_shipping_amount');
-	},
-	
-    amount: function(frm, cdt, cdn) {
-		frm.trigger('calculate_commission');
-		frm.trigger('calculate_total_amount');
-
-
-
-	},
-	rate: function(frm, cdt, cdn) {
-		
-		frm.trigger('calculate_shipping_amount');
-
-
-
-	}
-});
-frappe.ui.form.on('Parcel Content', {
-    item_code: function(frm, cdt, cdn) {
-        var row = locals[cdt][cdn];
-        if (row.item_code) {
-            frappe.call({
-                method: "cargo_management.parcel_management.doctype.parcel.parcel.get_item_price",  // استدعاء دالة البايثون
-                args: {
-                    item_code: row.item_code
-                },
-                callback: function(r) {
-                    if (r.message) {
-                        // طباعة القيمة في رسالة
-
-                        // تعيين السعر في الحقل
-                        frappe.model.set_value(cdt, cdn, 'amount', r.message);
-                    }
-                }
-            });
-        }
-    }
-});
-// دالة لاستدعاء دالة حساب shipping_amount عند إدخال Item_code
-// frappe.ui.form.on('Parcel Content', {
-//     item_code: function(frm, cdt, cdn) {
-//         let row = locals[cdt][cdn];
-        
-//         // هنا يمكنك جلب الأبعاد بناءً على الـ Item_code
-//         let length = row.length || 0;
-//         let width = row.width || 0;
-//         let height = row.height || 0;
-
-       
-//             // استدعاء دالة حساب الشحن
-//             frappe.call({
-//                 method: "cargo_management.parcel_management.doctype.parcel.parcel.calculate_shipping_amount",
-//                 args: {
-//                     length: length,
-//                     width: width,
-//                     height: height
-//                 },
-//                 callback: function(r) {
-//                     if (r.message) {
-// 						frappe.msgprint("The price of the item is: " );
-
-//                         // تحديث حقل rate بناءً على النتيجة
-//                         frappe.model.set_value(cdt, cdn, "rate", r.message);
-//                     }
-//                 }
-//             });
-//         }
-//     }
-// );
-
-frappe.ui.form.on('Parcel', {
-    not_arrived: function(frm) {
+	not_arrived: function(frm) {
         if (frm.doc.not_arrived) {
             // إخفاء الحقول الأخرى عند تحديد not_arrived
             frm.toggle_display('returned_to_sender', false);
@@ -133,7 +57,6 @@ frappe.ui.form.on('Parcel', {
             frm.toggle_display('is_parcel_received', true);
         }
     },
-	
 	returned_to_sender: function(frm) {
 			if (frm.doc.returned_to_sender) {
 				// إخفاء الحقول الأخرى عند تحديد not_arrived
@@ -144,7 +67,7 @@ frappe.ui.form.on('Parcel', {
 				frm.toggle_display('not_arrived', true);
 				frm.toggle_display('is_parcel_received', true);
 			}
-		},
+	},
 	is_parcel_received: function(frm) {
 			if (frm.doc.is_parcel_received) {
 				// إخفاء الحقول الأخرى عند تحديد not_arrived
@@ -155,117 +78,8 @@ frappe.ui.form.on('Parcel', {
 				frm.toggle_display('returned_to_sender', true);
 				frm.toggle_display('not_arrived', true);
 			}
-		}
-
-	
-});
-// 
-frappe.ui.form.on('Parcel Content', {
-	item_code: function(frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		var item_code = row.item_code;
-		var actual_weight = row.actual_weight; 
-		var length = row.length || 0;
-		var width = row.width || 0;
-		var height = row.height || 0;
-	
-		// الوصول إلى parcel_price_rule من النموذج الرئيسي
-		var parcel_price_rule = frm.doc.parcel_price_rule;
-	
-		// استخدام parcel_price_rule كقيمة افتراضية إذا لم يكن shipping_rule موجودًا
-		var shipping_rule = row.shipping_rule || parcel_price_rule;
-	
-		// تعيين قيمة shipping_rule إذا لم يكن موجودًا
-		if (!row.shipping_rule && parcel_price_rule) {
-			frappe.model.set_value(cdt, cdn, 'shipping_rule', parcel_price_rule);
-		}
-	
-		var amount = row.amount;
-	
-		frappe.call({
-			method: 'cargo_management.parcel_management.doctype.parcel.parcel.calculate_shipping_amount_by_rule',
-			args: {
-				item_code: item_code,
-				actual_weight: actual_weight,
-				length: length,
-				width: width,
-				height: height,
-				shipping_rule: shipping_rule,
-				amount: amount,
-			},
-			callback: function(response) {
-				if (response.message) {
-					frappe.model.set_value(cdt, cdn, 'rate', response.message);
-				} else {
-					frappe.msgprint(__('No shipping amount found.'));
-				}
-			}
-		});
 	},
-	shipping_rule: function(frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		var item_code = row.item_code;
-		var actual_weight = row.actual_weight; 
-		var length = row.length || 0;
-		var width = row.width || 0;
-		var height = row.height || 0;
 	
-		// الوصول إلى parcel_price_rule من النموذج الرئيسي
-		var parcel_price_rule = frm.doc.parcel_price_rule;
-	
-		var shipping_rule = row.shipping_rule || parcel_price_rule;
-	
-		// تعيين قيمة shipping_rule إذا لم يكن موجودًا
-		if (!row.shipping_rule && parcel_price_rule) {
-			frappe.model.set_value(cdt, cdn, 'shipping_rule', parcel_price_rule);
-		}
-	
-		var amount = row.amount;
-	
-		frappe.call({
-			method: 'cargo_management.parcel_management.doctype.parcel.parcel.calculate_shipping_amount_by_rule',
-			args: {
-				item_code: item_code,
-				actual_weight: actual_weight,
-				length: length,
-				width: width,
-				height: height,
-				shipping_rule: shipping_rule,
-				amount: amount,
-			},
-			callback: function(response) {
-				if (response.message) {
-					frappe.model.set_value(cdt, cdn, 'rate', response.message);
-				} else {
-					frappe.msgprint(__('No shipping amount found.'));
-				}
-			}
-		});
-	}
-	
-});
-
-// frappe.ui.form.on('Parcel Content', {
-//     qty: function(frm, cdt, cdn) {
-//         calculate_amount(frm, cdt, cdn);
-//     },
-//     rate: function(frm, cdt, cdn) {
-//         calculate_amount(frm, cdt, cdn);
-//     }
-// });
-
-// function calculate_amount(frm, cdt, cdn) {
-//     var row = locals[cdt][cdn];
-//     if (row.qty && row.rate) {
-//         row.amount = row.qty * row.rate;
-//         frm.refresh_field('parcel_content'); // Refresh the table to show the updated value
-//     }
-// }
-
-
-
-frappe.ui.form.on('Parcel', {
-
 	create_invoice(frm) {
 		if (frm.is_dirty()) {
 			frappe.throw(__("Please Save First"));
@@ -330,6 +144,34 @@ frappe.ui.form.on('Parcel', {
 	},
 
 	onload(frm) {
+		if (frm.doc.company) {
+            // استدعاء الدالة لاسترجاع قيمة Cost Center
+            frappe.call({
+                method: 'cargo_management.parcel_management.doctype.parcel.parcel.get_cost_center',  // استبدل بالقيم الصحيحة
+                args: {
+                    company: frm.doc.company
+                },
+                callback: function(response) {
+                    if (response.message) {
+                        frm.set_value('cost_center', response.message);  // تعيين قيمة Cost Center
+                    } else {
+                        frm.set_value('cost_center', '');  // إذا لم توجد قيمة
+                    }
+                }
+            });
+                       }
+               
+		frm.set_query("discount_account", function () {
+			return {
+				filters: {
+					company: frm.doc.company,
+					is_group: 0,
+					report_type: "Profit and Loss",
+				},
+			};
+		}),
+		
+    
 		frm.page.sidebar.toggle(false);
 		// FIXME: Observe if the indicator changes. This is useful for the 'Not Saved' status aka is_dirty(). We cannot read that from the events available
 		const observer = new MutationObserver(() => {
@@ -355,6 +197,7 @@ frappe.ui.form.on('Parcel', {
 		// frm.set_currency_labels(['rate', 'amount'], 'USD', 'content');
 	
 	},
+	
 
 	refresh(frm) {
 		if (frm.is_new()) {
@@ -371,10 +214,62 @@ frappe.ui.form.on('Parcel', {
                 if (auto_create_invoice === "Automatically") {
 					frm.fields_dict['create_invoice'].wrapper.style.display = 'none';
 				}}});
+				
+
+
+
+				frappe.call({
+					method: 'frappe.client.get_value',
+					args: {
+						doctype: 'Shipment Settings',
+						fieldname: 'commission'        
+					},
+					callback: function(r) {
+						if (r.message && r.message.commission) {
+							let commission_type = r.message.commission;
+							
+							if (commission_type === 'From Warehouse') {
+								frm.set_df_property('commission_section', 'hidden', 1);
+							} else {
+								frm.set_df_property('commission_section', 'hidden', 0);
+								
+								frm.collapse_section('commission_section');
+							}
+						} else {
+							frm.set_df_property('commission_section', 'hidden', 0);
+							
+							frm.collapse_section('commission_section');
+						}
+					}
+				});
+				frappe.call({
+					method: 'frappe.client.get_value',
+					args: {
+						doctype: 'Shipment Settings',
+						fieldname: 'enable_discount_accounting_for_parcel'
+					},
+					callback: function(r) {
+						if (r.message && r.message.enable_discount_accounting_for_parcel ) {
+							let enable_discount_accounting = r.message.enable_discount_accounting_for_parcel;
+				
+							if (enable_discount_accounting ==="1") {
+								frm.set_df_property('additional_discount_section', 'hidden', 0); // إظهار القسم
+							} else {
+								frm.set_df_property('additional_discount_section', 'hidden', 1); // إخفاء القسم
+							}
+						}
+					}
+				});
+				
+		frm.events.show_general_ledger(frm);
+		erpnext.accounts.ledger_preview.show_accounting_ledger_preview(frm);
+		update_tracking_numbers(frm);
+
 		// frm.events.show_explained_status(frm); // Show 'Explained Status' as Intro Message
 		// frm.events.build_custom_actions(frm);  // Adding custom buttons
 		
 		//frm.trigger('parcel_preview_dialog');
+		
 	},
 
 	tracking_number(frm) {
@@ -392,9 +287,6 @@ frappe.ui.form.on('Parcel', {
 	shipping_amount(frm) {
 		frm.events.calculate_total(frm);
 	},
-	
-	// Custom Functions
-
 	show_explained_status(frm) {
 		frm.doc.explained_status.message.forEach(m => frm.layout.show_message(m, ''));  // FIXME: Core overrides color
 		frm.layout.message.removeClass().addClass('form-message ' + frm.doc.explained_status.color);
@@ -478,12 +370,12 @@ frappe.ui.form.on('Parcel', {
 		</div>`);
 
 	},
-	refresh: function(frm) {
-		// Trigger necessary events on form refresh
-		// frm.events.transportation_multi_check(frm);
-		frm.events.show_general_ledger(frm);
-		erpnext.accounts.ledger_preview.show_accounting_ledger_preview(frm);
-	},
+	// refresh: function(frm) {
+	// 	// Trigger necessary events on form refresh
+	// 	// frm.events.transportation_multi_check(frm);
+	// 	frm.events.show_general_ledger(frm);
+	// 	erpnext.accounts.ledger_preview.show_accounting_ledger_preview(frm);
+	// },
 	
 	show_general_ledger: function (frm) {
 		// Ensure the button only shows if the document status is greater than 0 (submitted or cancelled)
@@ -544,8 +436,6 @@ frappe.ui.form.on('Parcel', {
 		frm.trigger('calculate_shipping_amount');
 
 	}},
-
-	
 	calculate_commission: function (frm) {
 		let section = frm.fields_dict.commission_section;
 		if (section && section.df.hidden) {
@@ -553,8 +443,6 @@ frappe.ui.form.on('Parcel', {
 			frm.set_value('total_commission', 0);
 			return;
 		}
-	
-	
         if (!frm.doc.commission_rate || frm.doc.commission_rate === 0) {
             frm.set_value('total_commission', 0);
             return;
@@ -616,13 +504,10 @@ frappe.ui.form.on('Parcel', {
 			frm.doc.content.forEach(function (row) {
 				shipping_amount += row.rate;
 			});
-		} frm.set_value('shipping_amount', shipping_amount);
+		} 
+		frm.set_value('shipping_amount', shipping_amount);
 		console.log("hi ");
 	},
-	
-	total_commission: function(frm) {
-        frm.trigger('calculate_rate_from_commission');
-    },
 	commission_rate : function(frm) {
 		frm.trigger('calculate_commission');
 	},
@@ -642,6 +527,10 @@ frappe.ui.form.on('Parcel', {
 				});
 			}
 	},
+	additional_discount_percentage: function(frm) {
+		calculateDiscount(frm);
+       
+    },
 	
 	est_departure: function(frm) {
 		var selected_date = frm.doc.est_departure;
@@ -680,54 +569,6 @@ frappe.ui.form.on('Parcel', {
             frm.set_value('est_delivery_2', null); 
         }
     },
-
-	
-	// shipper_name : function (frm){
-	// 	erpnext.utils.get_party_details(
-	// 		this.frm,
-	// 		"erpnext.accounts.party.get_party_details",
-	// 		{
-	// 			posting_date: this.frm.doc.order_date,
-	// 			party: this.frm.doc.shipper_name,
-	// 			party_type: "Customer",
-	// 			account: this.frm.doc.debit_to,
-	// 			// price_list: this.frm.doc.selling_price_list,
-	// 			// pos_profile: pos_profile,
-	// 		},
-	// 		// function () {
-	// 		// 	me.apply_pricing_rule();
-	// 		// }
-	// 	);
-	// },
-	
-	//https://github.com/frappe/frappe/pull/12471 and https://github.com/frappe/frappe/pull/14181/files
-	// sales_order_dialog(frm) {
-	// 	const so_dialog = new frappe.ui.form.MultiSelectDialog({
-	// 		doctype: 'Sales Order',
-	// 		target: frm,
-	// 		setters: {
-	// 			delivery_date: undefined,
-	// 			status: undefined
-	// 		},
-	// 		add_filters_group: 1,
-	// 		get_query: () => {
-	// 			return {
-	// 				filters: {  // TODO: Only uncompleted orders!
-	// 					docstatus: 1,
-	// 					customer: frm.doc.customer,
-	// 				}
-	// 			};
-	// 		},
-	// 		action: (selections) => {
-	// 			if (selections.length === 0) {
-	// 				frappe.msgprint(__("Please select {0}", [so_dialog.doctype]))
-	// 				return;
-	// 			}
-	// 			// so_dialog.dialog.hide();
-	// 			frm.events.so_items_dialog(frm, selections);
-	// 		}
-	// 	});
-	// },
 
 	so_items_dialog: async function (frm, sales_orders) {
 		// Getting all sales order items from Sales Order
@@ -772,6 +613,9 @@ frappe.ui.form.on('Parcel', {
 		});
 
 	},
+	
+	
+
 
 	calculate_total(frm) {
 		frm.trigger('calculate_total_amount');
@@ -792,6 +636,58 @@ frappe.ui.form.on('Parcel', {
 			frm.set_value('weight_type', 'Actual Weight');
 		}
 	},
+// 	additional_discount_amount: function(frm) {
+//     if (frm.doc.additional_discount_amount && frm.doc.content && frm.doc.content.length > 0) {
+//         let total = frm.doc.total || 0; // إجمالي المبلغ
+//         let additional_discount_percentage = frm.doc.additional_discount_percentage || 0; // نسبة الخصم
+
+//         frm.doc.content.forEach(function(row) {
+//             if (row.rate) {
+//                 let discountPerRow = (row.rate * additional_discount_percentage) / 100;
+
+//                 let net_rate = row.rate - discountPerRow;
+
+//                 if (net_rate < 0) {
+//                     net_rate = 0;
+//                 }
+
+//                 frappe.model.set_value(row.doctype, row.name, 'net_rate', net_rate);
+//                 calculate_net_amount(row.doctype, row.name); // حساب المبلغ الصافي
+//             }
+//         });
+
+//         calculate_net_total(frm);
+//     }
+// },
+	additional_discount_amount: function(frm) {
+		
+
+		if (frm.doc.additional_discount_amount && frm.doc.content && frm.doc.content.length > 0) {
+			let total = frm.doc.total || 0; 
+			let additional_discount_percentage = frm.doc.additional_discount_percentage || 0; // نسبة الخصم
+
+			frm.doc.content.forEach(function(row) {
+				if (row.rate) {
+					let discountPerRow = (row.rate * additional_discount_percentage) / 100;
+
+					let net_rate = row.rate - discountPerRow;
+
+					if (net_rate < 0) {
+						net_rate = 0;
+					}
+
+					frappe.model.set_value(row.doctype, row.name, 'net_rate', net_rate);
+					calculate_net_amount(row.doctype, row.name); // حساب المبلغ الصافي
+				}
+			});
+
+			calculate_net_total(frm);
+		
+
+		}
+	},
+
+	
 	calculate_content_amounts_and_total(frm, cdt, cdn) {
 		console.log("--------calculate_content_amounts_and_total------")
 		let row = locals[cdt][cdn]; // Getting Content Child Row being edited
@@ -813,21 +709,168 @@ frappe.ui.form.on('Parcel', {
 	// 		}).fail(() => frm.set_value('parcel_price_rule', ''));
 	// 	}
 	// }
-	
 });
 
-frappe.ui.form.on('Parcel Content', {
 
+frappe.ui.form.on('Parcel Content', {
+    amount: function(frm, cdt, cdn) {
+		// frm.trigger('calculate_commission');
+		// frm.trigger('calculate_total_amount');
+	},
+    // item_code: function(frm, cdt, cdn) {
+    //     var row = locals[cdt][cdn];
+    //     if (row.item_code) {
+    //         frappe.call({
+    //             method: "cargo_management.parcel_management.doctype.parcel.parcel.get_item_price",  // استدعاء دالة البايثون
+    //             args: {
+    //                 item_code: row.item_code
+    //             },
+    //             callback: function(r) {
+    //                 if (r.message) {
+    //                     // طباعة القيمة في رسالة
+
+    //                     // تعيين السعر في الحقل
+    //                     frappe.model.set_value(cdt, cdn, 'amount', r.message);
+    //                 }
+    //             }
+    //         });
+    //     }
+    // },
+	item_code: function(frm, cdt, cdn) {
+		var row = locals[cdt][cdn];
+		var item_code = row.item_code;
+		var actual_weight = row.actual_weight; 
+		var length = row.length || 0;
+		var width = row.width || 0;
+		var height = row.height || 0;
+	
+		// الوصول إلى parcel_price_rule من النموذج الرئيسي
+		var parcel_price_rule = frm.doc.parcel_price_rule;
+	
+		// استخدام parcel_price_rule كقيمة افتراضية إذا لم يكن shipping_rule موجودًا
+		var shipping_rule = row.shipping_rule || parcel_price_rule;
+	
+		// تعيين قيمة shipping_rule إذا لم يكن موجودًا
+		if (!row.shipping_rule && parcel_price_rule) {
+			frappe.model.set_value(cdt, cdn, 'shipping_rule', parcel_price_rule);
+		}
+	
+		var amount = row.amount;
+	
+		frappe.call({
+			method: 'cargo_management.parcel_management.doctype.parcel.parcel.calculate_shipping_amount_by_rule',
+			args: {
+				item_code: item_code,
+				actual_weight: actual_weight,
+				length: length,
+				width: width,
+				height: height,
+				shipping_rule: shipping_rule,
+				amount: amount,
+			},
+			callback: function(response) {
+				if (response.message) {
+					frappe.model.set_value(cdt, cdn, 'rate', response.message);
+				} else {
+					frappe.msgprint(__('No shipping amount found.'));
+				}
+			}
+		});
+		frm.trigger("additional_discount_amount").then(() => {
+			calculate_net_amount(cdt, cdn);
+			
+		});
+
+	},
+	shipping_rule: function(frm, cdt, cdn) {
+
+		var row = locals[cdt][cdn];
+		var item_code = row.item_code;
+		var actual_weight = row.actual_weight; 
+		var length = row.length || 0;
+		var width = row.width || 0;
+		var height = row.height || 0;
+		var volumetric_weight = row.volumetric_weight || 0;
+	
+		var parcel_price_rule = frm.doc.parcel_price_rule;
+	
+		var shipping_rule = row.shipping_rule || parcel_price_rule;
+	
+		if (!row.shipping_rule && parcel_price_rule) {
+			frappe.model.set_value(cdt, cdn, 'shipping_rule', parcel_price_rule);
+		}
+	
+		var amount = row.amount;
+	
+		frappe.call({
+			method: 'cargo_management.parcel_management.doctype.parcel.parcel.calculate_shipping_amount_by_rule',
+			args: {
+				item_code: item_code,
+				actual_weight: actual_weight,
+				length: length,
+				width: width,
+				height: height,
+				shipping_rule: shipping_rule,
+				amount: amount,
+				volumetric_weight:volumetric_weight,
+			},
+			callback: function(response) {
+				if (response.message) {
+					frappe.model.set_value(cdt, cdn, 'rate', response.message);
+					frm.trigger('calculate_amount');
+					frm.trigger("additional_discount_amount").then(() => {
+						calculate_net_amount(cdt, cdn);
+						calculateDiscount(frm);
+
+					});
+
+
+				} else {
+					frappe.msgprint(__('No shipping amount found.'));
+				}
+			}
+
+		});
+		frm.trigger("additional_discount_amount").then(() => {
+			calculate_net_amount(cdt, cdn);
+			calculate_net_total(frm);
+
+		});
+        calculate_amount(cdt, cdn);
+
+
+
+	},
+	
+   
 	content_remove(frm) {
 		frm.events.calculate_total(frm);
 	},
-
 	qty(frm, cdt, cdn) {
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
-	},
+        calculate_amount(cdt, cdn);
+		calculate_net_amount(cdt, cdn);
+		calculateDiscount(frm);
 
+
+	},
 	rate(frm, cdt, cdn) {
+        calculate_amount(cdt, cdn);
+
+
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
+		frm.trigger("additional_discount_amount").then(() => {
+			calculate_net_amount(cdt, cdn);
+			calculate_net_total(frm);
+			calculateDiscount(frm);
+
+
+		});
+        //calculate_amount(frm, cdt, cdn);
+		frm.trigger('calculate_shipping_amount');
+		
+
+
 	},
 	actual_weight(frm, cdt, cdn) {
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
@@ -844,6 +887,66 @@ frappe.ui.form.on('Parcel Content', {
 	height(frm, cdt, cdn) {
 		frm.events.calculate_content_amounts_and_total(frm, cdt, cdn);
 	},
-
-
 });
+
+function calculate_amount(cdt, cdn) {
+    let row = locals[cdt][cdn];
+    if (row.rate && row.qty) {
+        let amount = row.rate * row.qty;
+        frappe.model.set_value(cdt, cdn, 'amount', amount);
+    }
+}
+function calculate_net_amount(cdt, cdn) {
+    let row = locals[cdt][cdn];
+    if (row.net_rate && row.qty) {
+        let net_amount = row.net_rate * row.qty;
+        frappe.model.set_value(cdt, cdn, 'net_amount', net_amount);
+    }
+}
+function calculate_net_total(frm) {
+    let net_total = 0;
+
+    frm.doc.content.forEach(function(row) {
+        if (row.net_amount) {
+            net_total += row.net_amount;
+        }
+    });
+
+    frm.set_value('net_total', net_total);
+}
+function calculateDiscount(frm) {
+	let total = frm.doc.total || 0;
+	let additional_discount_percentage = frm.doc.additional_discount_percentage || 0; 
+
+	let additional_discount_amount = (total * additional_discount_percentage) / 100;
+
+	frm.set_value('additional_discount_amount', additional_discount_amount);
+}
+function calculateDiscountPercentage(frm) {
+    let total = frm.doc.total || 0;
+    let additional_discount_amount = frm.doc.additional_discount_amount || 0; // الحصول على مبلغ الخصم، أو 0 إذا كان غير موجود
+
+    if (total > 0) {
+        let additional_discount_percentage = (additional_discount_amount / total) * 100;
+
+        frm.set_value('additional_discount_percentage', additional_discount_percentage);
+    } else {
+        frm.set_value('additional_discount_percentage', 0);
+    }
+}
+function update_tracking_numbers(frm) {
+    // الحصول على الاسم الفريد من جدول Parcel
+    let parent_tracking_number = frm.doc.name; // نفترض أن اسم الجدول Parcel هو الفريد
+
+    // حساب عدد الصفوف في جدول content وتحديث tracking_number
+    frm.doc.content.forEach(function(row, idx) {
+        row.tracking_number1 = `${parent_tracking_number}-${idx + 1}`;
+    })}
+
+
+
+
+
+
+
+

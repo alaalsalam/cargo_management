@@ -70,7 +70,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-08-21 15:43:31.239777",
+ "modified": "2024-09-27 15:53:25.424885",
  "modified_by": "Administrator",
  "module": "Shipment Management",
  "name": "Shipments",
@@ -91,7 +91,7 @@
   }
  ],
  "roles": [],
- "sequence_id": 14.0,
+ "sequence_id": 23.0,
  "shortcuts": [],
  "title": "Shipments"
 }

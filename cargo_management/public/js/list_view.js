@@ -4,21 +4,37 @@ console.log("Custom List View script loaded");
 console.log("##########################################");
 
 // تأكد من أن الشيفرة تنتظر حتى يتم تحميل الصفحة بالكامل
-frappe.after_ajax(() => {
-    const route = frappe.get_route();
-    if (route && route.length > 1) {
-        const doctype = route[1]; // الحصول على اسم الشاشة من المسار
+// window.onload = function() {
+//     if(cur_list.doctype){
+//         console.log(cur_list.doctype)
+//         add_list_button(cur_list.doctype)
+//     }
+// }
+$(window).on('load', function() {
+    const route2 = frappe.get_route();
+    console.log(route2)
+//     add_list_button(route2[1])
+// });
 
-        // تطبيق الإعدادات بناءً على الـ doctype الحالي
-        frappe.listview_settings[doctype] = {
+
+// function add_list_button(doctype_name){
+    // const route = frappe.get_route();
+    // console.log(route)
+    // if (route && route.length > 1) {
+    //     const doctype = route[1]; // الحصول على اسم الشاشة من المسار
+    //     console.log("Current doctype:", doctype);
+
+    //     // تطبيق الإعدادات بناءً على الـ doctype الحالي
+        frappe.listview_settings[route2[1]] = {
             onload: function(listview) {
-                if (listview && listview.cur_list) {
-                    console.log("Current doctype:", listview.cur_list.doctype);
-                } else {
-                    console.error("cur_list is not available");
-                }
 
-                console.log("ListView onload for doctype:", listview.doctype);
+                // if (listview && listview.cur_list) {
+                //     console.log("Current doctype:", listview.cur_list.doctype);
+                // } else {
+                //     console.error("cur_list is not available");
+                // }
+
+                // console.log("ListView onload for doctype:", listview.doctype);
                 listview.page.sidebar.toggle(false);  // إخفاء الشريط الجانبي
             },
             button: {
@@ -34,11 +50,10 @@ frappe.after_ajax(() => {
                 }
             }
         };
-    } else {
-        console.error("Route is not available or does not contain a doctype.");
-    }
+    // } else {
+    //     console.error("Route is not available or does not contain a doctype.");
+    // }
 });
-
 // Parcel preview dialog function
 function parcel_preview_dialog(doc) {
     console.log("Opening parcel preview dialog for doc:", doc);  // تأكيد استدعاء الدالة

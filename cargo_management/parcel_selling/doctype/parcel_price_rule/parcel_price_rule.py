@@ -143,15 +143,10 @@ class ParcelPriceRule(Document):
 		for i, d in enumerate(self.conditions):
 			d.idx = i + 1
 
+    # ... (بقية الكود كما هو)
+
 	def validate_overlapping_shipping_rule_conditions(self):
 		def overlap_exists_between(num_range1, num_range2):
-			"""
-			num_range1 and num_range2 are two ranges
-			ranges are represented as a tuple e.g. range 100 to 300 is represented as (100, 300)
-			if condition num_range1 = 100 to 300
-			then condition num_range2 can only be like 50 to 99 or 301 to 400
-			hence, non-overlapping condition = (x1 <= x2 < y1 <= y2) or (y1 <= y2 < x1 <= x2)
-			"""
 			(x1, x2), (y1, y2) = num_range1, num_range2
 			separate = (x1 <= x2 <= y1 <= y2) or (y1 <= y2 <= x1 <= x2)
 			return not separate
@@ -160,8 +155,12 @@ class ParcelPriceRule(Document):
 		for i in range(0, len(self.conditions)):
 			for j in range(i + 1, len(self.conditions)):
 				d1, d2 = self.conditions[i], self.conditions[j]
+				
+				# Allow duplicate values if Item Groups are different
+				if d1.item_group != d2.item_group:
+					continue
+
 				if d1.as_dict() != d2.as_dict():
-					# in our case, to_value can be zero, hence pass the from_value if so
 					range_a = (d1.from_value, d1.to_value or d1.from_value)
 					range_b = (d2.from_value, d2.to_value or d2.from_value)
 					if overlap_exists_between(range_a, range_b):
@@ -182,33 +181,32 @@ class ParcelPriceRule(Document):
 
 
 
+	# def add_shipping_rule_to_tax_table(self, doc, shipping_amount):
+	# 	shipping_charge = {
+	# 		"charge_type": "Actual",
+	# 		"account_head": self.account,
+	# 		"cost_center": self.cost_center,
+	# 	}
+	# 	if self.shipping_rule_type == "Selling":
+	# 		# check if not applied on purchase
+	# 		if not doc.meta.get_field("taxes").options == "Sales Taxes and Charges":
+	# 			frappe.throw(_("Shipping rule only applicable for Selling"))
+	# 		shipping_charge["doctype"] = "Sales Taxes and Charges"
+	# 	else:
+	# 		# check if not applied on sales
+	# 		if not doc.meta.get_field("taxes").options == "Purchase Taxes and Charges":
+	# 			frappe.throw(_("Shipping rule only applicable for Buying"))
 
-	def add_shipping_rule_to_tax_table(self, doc, shipping_amount):
-		shipping_charge = {
-			"charge_type": "Actual",
-			"account_head": self.account,
-			"cost_center": self.cost_center,
-		}
-		if self.shipping_rule_type == "Selling":
-			# check if not applied on purchase
-			if not doc.meta.get_field("taxes").options == "Sales Taxes and Charges":
-				frappe.throw(_("Shipping rule only applicable for Selling"))
-			shipping_charge["doctype"] = "Sales Taxes and Charges"
-		else:
-			# check if not applied on sales
-			if not doc.meta.get_field("taxes").options == "Purchase Taxes and Charges":
-				frappe.throw(_("Shipping rule only applicable for Buying"))
+	# 		shipping_charge["doctype"] = "Purchase Taxes and Charges"
+	# 		shipping_charge["category"] = "Valuation and Total"
+	# 		shipping_charge["add_deduct_tax"] = "Add"
 
-			shipping_charge["doctype"] = "Purchase Taxes and Charges"
-			shipping_charge["category"] = "Valuation and Total"
-			shipping_charge["add_deduct_tax"] = "Add"
-
-		existing_shipping_charge = doc.get("taxes", filters=shipping_charge)
-		if existing_shipping_charge:
-			# take the last record found
-			existing_shipping_charge[-1].tax_amount = shipping_amount
-		else:
-			shipping_charge["tax_amount"] = shipping_amount
-			shipping_charge["description"] = self.label
-			doc.append("taxes", shipping_charge)
+	# 	existing_shipping_charge = doc.get("taxes", filters=shipping_charge)
+	# 	if existing_shipping_charge:
+	# 		# take the last record found
+	# 		existing_shipping_charge[-1].tax_amount = shipping_amount
+	# 	else:
+	# 		shipping_charge["tax_amount"] = shipping_amount
+	# 		shipping_charge["description"] = self.label
+	# 		doc.append("taxes", shipping_charge)
 	

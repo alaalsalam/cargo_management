@@ -27,6 +27,7 @@ class ShipmentSettings(Document):
 		create_invoice: DF.Literal["Manually", "Automatically"]
 		default_commission_rate: DF.Float
 		default_sales_item: DF.Link | None
+		enable_discount_accounting_for_parcel: DF.Check
 		expense_account_group: DF.TableMultiSelect[ShippingExpensesAccountGroup]
 		fuel_item: DF.Link
 		fuel_item_group: DF.Link | None

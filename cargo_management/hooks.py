@@ -52,8 +52,8 @@ def get_non_table_doctypes():
 
 
 
-doctype_list_js = get_non_table_doctypes()
-# doctype_list_js = {"*" : "public/js/list_view.js"}
+# doctype_list_js = get_non_table_doctypes()
+doctype_list_js = {"*" : "public/js/list_view.js"}
 
 # Include js in doctype views: override/extend Standard Form Scripts.
 doctype_js = {

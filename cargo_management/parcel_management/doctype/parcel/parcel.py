@@ -36,9 +36,12 @@ class Parcel(AccountsController):
 		from cargo_management.parcel_management.doctype.parcel_content.parcel_content import ParcelContent
 		from frappe.types import DF
 
+		additional_discount_amount: DF.Currency
+		additional_discount_percentage: DF.Float
 		agent: DF.Link
 		agent_account: DF.Link
 		amended_from: DF.Link | None
+		apply_additional_discount_on: DF.Literal["", "Grand Total", "Net Total"]
 		barcode: DF.Barcode | None
 		cargo_shipment: DF.Link | None
 		carrier: DF.Literal["Drop Off", "Pick Up", "Unknown", "Amazon", "USPS", "UPS", "DHL", "FedEx", "OnTrac", "Cainiao", "SF Express", "Yanwen", "YunExpress", "SunYou", "Pitney Bowes", "Veho"]
@@ -51,9 +54,11 @@ class Parcel(AccountsController):
 		commission_rate: DF.Currency
 		company: DF.Link
 		content: DF.Table[ParcelContent]
+		cost_center: DF.Link
 		currency: DF.Link | None
 		debit_to: DF.Link | None
 		destination: DF.Data | None
+		discount_account: DF.Link | None
 		easypost_id: DF.Data | None
 		est_delivery_1: DF.Date | None
 		est_delivery_2: DF.Date | None
@@ -131,80 +136,23 @@ class Parcel(AccountsController):
 
 		return {}
    # --------------------------------------
-	#@override
-	@frappe.whitelist()
-	def calculate_shipping_amount_by_rule( self,item_code=None, actual_weight=None, length=None ,width=None, height=None):
-		pass
-		
-		# frappe.log(f"Starting calculation with Parcel Price Rule: {self.parcel_price_rule}")
 
-		# if self.parcel_price_rule == 'Volumetric Weight':
-		# 	frappe.log("hi - Inside Volumetric Weight condition")
-		# 	# if length is not None and width is not None and height is not None:
-		# 	# 	try:
-		# 	# 		length = float(length)
-		# 	# 		width = float(width)
-		# 	# 		height = float(height)
-					
-		# 	# 		volume = length * width * height
-					
-		# 	# 		if volume < 10:
-		# 	# 			return 100
-		# 	# 		elif 10 <= volume < 20:
-		# 	# 			return 200
-		# 	# 		elif 20 <= volume < 30:
-		# 	# 			return 300
-		# 	# 		else:
-		# 	# 			return 400
-		# 	# 	except ValueError as e:
-		# 	# 		return f"Error: {str(e)}"
-		# 	# else:
-		# 	# 	return "Error: Length, width, and height are required for volumetric weight calculation."
-		
-		# elif  self.parcel_price_rule == 'Item Group':
-		# 	frappe.log("bye - Inside Item Group condition")
-
-		# 		# item_group = frappe.db.get_value('Item', {'item_code': item_code}, 'item_group')
-
-		# 		# price_rule = frappe.get_all('Parcel Price Rule',
-		# 		# 	filters={'item_group': item_group},
-		# 		# 	fields=['name']
-		# 		# )
-
-		# 		# if price_rule:
-		# 		# 	conditions = frappe.get_all('Parcel Rule Condition',
-		# 		# 		filters={
-		# 		# 			'parent': price_rule[0].name,
-		# 		# 			'from_value': ['<=', actual_weight],
-		# 		# 			'to_value': ['>=', actual_weight]
-		# 		# 		},
-		# 		# 		fields=['shipping_amount']
-		# 		# 	)
-
-		# 		# 	if conditions:
-		# 		# 		shipping_amount = conditions[0].shipping_amount
-		# 		# 		frappe.log(f"Shipping Amount: {shipping_amount}")
-		# 		# 		return shipping_amount
-				
-		# 		# frappe.log("No suitable shipping condition found. Returning 0.")
-		# 		# return 0
-		# else:
-		# 	frappe.log("No suitable shipping condition found. Returning 0.")
-
-				# return "Error: Item code and actual weight are required for item group calculation."
-		
 	def save(self, *args, **kwargs):
 		""" Override def to change validation behaviour. Useful when called from outside a form. """
 
 		return super(Parcel, self).save(*args, **kwargs)
 
 	def validate(self):
+		total_rows = len(self.content)
+
 		self.apply_parcel_price_rule()
 		""" Sanitize fields """
 		self.tracking_number = self.name
 		self.tracking_number = self.tracking_number.strip().upper()  # Only uppercase with no spaces
 		for tracking in self.content:
-			tracking.tracking_number = str(self.tracking_number) + "-" + str(tracking.idx)
+			tracking.tracking_number = str(self.tracking_number) + "-" + str(total_rows) + "." + str(tracking.idx)
+			#tracking.tracking_number = f"{self.tracking_number}-{tracking.idx // 10}.{tracking.idx % 10}"
+
 
 			
 # 		self.validate_debit_to_acc()
@@ -487,6 +435,14 @@ class Parcel(AccountsController):
 			# 	self.doctype,
 			# 	self.return_against if cint(self.is_return) and self.return_against else self.name,
 			# )
+	
+              
+	def get_default_cost_center(self):
+		if not self.cost_center:
+			# جلب مركز التكلفة الافتراضي من إعدادات الشركة
+			self.cost_center = frappe.get_value("Company", self.company, "cost_center")
+		return self.cost_center
+              
 
 
  
@@ -498,25 +454,32 @@ class Parcel(AccountsController):
 		self.make_agent_gl_entry(gl_entries)
 		# self.make_parcel_gl_entries(gl_entries)
 		self.make_agent_commission_gl_entry(gl_entries)
+		self.make_discount_gl_entry(gl_entries)
 
 
 		return gl_entries
 		
 	def make_agent_gl_entry(self, gl_entries):
 		settings = frappe.get_value('Shipment Settings', None, 'commission')
+		setting = frappe.get_value('Shipment Settings', None, 'enable_discount_accounting_for_parcel')
+   
 
 		# إذا كانت الإعدادات تشير إلى أن العمولة يجب أن تُحسب
 		if settings != 'From Parcel':
 			self.total_commission = 0
+		if setting =="0":          
+			self.additional_discount_amount= 0    
 		gl_entries.append(
 			self.get_gl_dict(
+	
 				{
 					"account": self.debit_to,
 					"party_type": "Customer",
 					"party": self.shipper_name,
 					"posting_date": self.order_date,
 					"against": self.agent_account,
-					"credit": self.total,
+					"credit": self.total - self.additional_discount_amount,
+                              
 
 					# "debit_in_account_currency": self.total
 					# if self.party_account_currency == self.company_currency
@@ -574,6 +537,34 @@ class Parcel(AccountsController):
 						item=self,
 					)
 				)
+	def make_discount_gl_entry(self, gl_entries):
+		settings = frappe.get_value('Shipment Settings', None, 'enable_discount_accounting_for_parcel')
+
+		# # إذا كانت الإعدادات تشير إلى أن العمولة يجب أن تُحسب
+		if settings =="1":
+			if self.discount_account and self.additional_discount_amount:
+				gl_entries.append(
+					self.get_gl_dict(
+						{
+							"account": self.discount_account,
+							"posting_date": self.order_date,
+							
+							"against": self.receiving_account,
+							"credit": self.additional_discount_amount,
+                                          
+                                          
+							"cost_center": self.cost_center,         
+             
+							# "credit_in_account_currency": self.total,
+							# "against_voucher": self.name,
+							# "against_voucher_type": self.doctype,
+							# "cost_center": self.cost_center,
+							# "project": self.project,
+						},
+						item=self,
+					)
+				)
+
 
 	def mark_parcel_as_never_arrived(self):
 		if self.not_arrived and self.status != 'Never Arrived':
@@ -836,8 +827,8 @@ def get_item_price(item_code, price_list=None):
         return item_price[0].price_list_rate
     else:
         frappe.throw(f"Price not found for item {item_code}")
+        
 @frappe.whitelist()
-
 # def calculate_shipping_amount(length, width, height):
 #     try:
 #         # تحويل النصوص إلى أعداد
@@ -874,41 +865,58 @@ def calculate_shipping_amount_by_item_group( item_code=None, actual_weight=None,
         conditions = frappe.get_all('Parcel Rule Condition',
             filters={
                 'parent': price_rule[0].name,
-                'from_value': ['<=', actual_weight],  # استخدم actual_weight مباشرة
-                'to_value': ['>=', actual_weight]     # استخدم actual_weight مباشرة
+                'from_value': ['<=', actual_weight], 
+                'to_value': ['>=', actual_weight]     
             },
             fields=['shipping_amount']
         )
 
         if conditions:
             shipping_amount = conditions[0].shipping_amount
-            frappe.log(f"Shipping Amount: {shipping_amount}")  # طباعة القيمة المرجعة
+            frappe.log(f"Shipping Amount: {shipping_amount}")  
             return shipping_amount
     
-    frappe.log("No suitable shipping condition found. Returning 0.")  # طباعة إذا لم يتم العثور على قاعدة مناسبة
+    frappe.log("No suitable shipping condition found. Returning 0.") 
     return 0
+
 @frappe.whitelist()
-def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None, actual_weight=None, length=None ,width=None, height=None):
-    
-    
+def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None,volumetric_weight=None, actual_weight=None, length=None ,width=None, height=None):
     if shipping_rule == 'Volumetric Weight':
-        
         if length is not None and width is not None and height is not None:
             try:
                 length = float(length)
                 width = float(width)
                 height = float(height)
+                if volumetric_weight is None:
+                    return "Error: Volumetric weight is required for calculation."
                 
-                volume = length * width * height
+                volumetric_weight= float(volumetric_weight)
                 
-                if volume < 10:
-                    return 100
-                elif 10 <= volume < 20:
-                    return 200
-                elif 20 <= volume < 30:
-                    return 300
-                else:
-                    return 400
+                volume = (length * width * height)
+
+                price_rule = frappe.get_all('Parcel Price Rule',
+                    filters={'name': 'Volumetric Weight'}, 
+                    fields=['name']
+                )
+
+                if price_rule:
+                    conditions = frappe.get_all('Parcel Rule Condition',
+                        filters={
+                            'parent': price_rule[0].name,
+                            'from_value': ['<=', volume],
+                            'to_value': ['>=', volume]
+                        },
+                        fields=['shipping_amount']
+                    )
+
+                    if conditions:
+                        shipping_amount = conditions[0].shipping_amount
+                        frappe.log(f"Shipping Amount from Volumetric Weight Rule: {shipping_amount}")
+                        return shipping_amount
+
+                # إذا لم توجد قواعد مناسبة، نرجع إلى الحساب الافتراضي بناءً على الحجم
+                
+                
             except ValueError as e:
                 return f"Error: {str(e)}"
         else:
@@ -926,6 +934,7 @@ def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None, actual_we
                 conditions = frappe.get_all('Parcel Rule Condition',
                     filters={
                         'parent': price_rule[0].name,
+						'item_group': item_group,
                         'from_value': ['<=', actual_weight],
                         'to_value': ['>=', actual_weight]
                     },
@@ -939,12 +948,53 @@ def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None, actual_we
             
             frappe.log("No suitable shipping condition found. Returning 0.")
             return 0
-    elif  shipping_rule == 'Actual Weight':
-          actual_weight = float(actual_weight)
-          return actual_weight
+        
+    elif shipping_rule == 'Actual Weight':
+          
+   
+        try:
+            actual_weight = float(actual_weight)
+            
+            price_rule = frappe.get_all('Parcel Price Rule',
+                filters={'name': 'Actual Weight'}, 
+                fields=['name']
+            )
+
+            if price_rule:
+                conditions = frappe.get_all('Parcel Rule Condition',
+                    filters={
+                        'parent': price_rule[0].name,
+                        'from_value': ['<=', actual_weight],
+                        'to_value': ['>=', actual_weight]
+                    },
+                    fields=['shipping_amount']
+                )
+
+                if conditions:
+                    shipping_amount = conditions[0].shipping_amount
+                    frappe.log(f"Shipping Amount from Actual Weight Rule: {shipping_amount}")
+                    return shipping_amount
+
+           
+        except ValueError as e:
+            return f"Error: {str(e)}"
+   
+		
+	
+
     elif  shipping_rule == 'Fixed':
           fixed=frappe.get_value('Parcel Price Rule',shipping_rule,'shipping_amount')
           return fixed
     else:
-            return "Error: Item code and actual weight are required for item group calculation."
+        return "Error: Item code and actual weight are required for item group calculation."
+@frappe.whitelist()
+def get_cost_center(company):
+    if not company:
+       frappe.throw("Company is required")
+
+    company_doc = frappe.get_doc("Company", company)
+    if company_doc and company_doc.cost_center:
+        return company_doc.cost_center
+    else:
+        return None   
     
