@@ -577,7 +577,7 @@
    "fieldname": "piece_type",
    "fieldtype": "Select",
    "label": "Piece Type",
-   "options": "Box\nEnvelope\nPallet\nCarton\nLuggage\nCrate\nOthers"
+   "options": "Personal\nCommercial"
   },
   {
    "fieldname": "company",
@@ -768,7 +768,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-09-27 02:50:49.177430",
+ "modified": "2024-09-29 23:18:24.805834",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

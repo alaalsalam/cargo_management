@@ -73,7 +73,7 @@ class Parcel(AccountsController):
 		notes: DF.SmallText | None
 		order_date: DF.Date | None
 		parcel_price_rule: DF.Link | None
-		piece_type: DF.Literal["Box", "Envelope", "Pallet", "Carton", "Luggage", "Crate", "Others"]
+		piece_type: DF.Literal["Personal", "Commercial"]
 		receiver_address: DF.Data | None
 		receiver_email: DF.Data | None
 		receiver_name: DF.Link

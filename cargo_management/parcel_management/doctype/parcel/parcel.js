@@ -1,31 +1,4 @@
 frappe.ui.form.on('Parcel', {
-    // refresh: function(frm) {
-    //     frappe.call({
-    //         method: 'frappe.client.get_value',
-    //         args: {
-    //             doctype: 'Shipment Settings',
-    //             fieldname: 'commission'        
-    //         },
-    //         callback: function(r) {
-    //             if (r.message && r.message.commission) {
-    //                 let commission_type = r.message.commission;
-                    
-    //                 if (commission_type === 'From Warehouse') {
-    //                     frm.set_df_property('commission_section', 'hidden', 1);
-    //                 } else {
-    //                     frm.set_df_property('commission_section', 'hidden', 0);
-                        
-    //                     frm.collapse_section('commission_section');
-    //                 }
-    //             } else {
-    //                 frm.set_df_property('commission_section', 'hidden', 0);
-                    
-    //                 frm.collapse_section('commission_section');
-    //             }
-    //         }
-    //     });
-    // },
-
 	mode_of_payment: function(frm) {
 		if (!frm.doc.company) {
 			frappe.msgprint(__('Please enter the Company name.'));
@@ -215,8 +188,6 @@ frappe.ui.form.on('Parcel', {
 					frm.fields_dict['create_invoice'].wrapper.style.display = 'none';
 				}}});
 				
-
-
 
 				frappe.call({
 					method: 'frappe.client.get_value',
@@ -736,7 +707,7 @@ frappe.ui.form.on('Parcel Content', {
     //         });
     //     }
     // },
-	item_code: function(frm, cdt, cdn) {
+	actual_weight: function(frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
 		var item_code = row.item_code;
 		var actual_weight = row.actual_weight; 
