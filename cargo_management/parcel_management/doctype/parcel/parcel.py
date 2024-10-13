@@ -828,29 +828,7 @@ def get_item_price(item_code, price_list=None):
     else:
         frappe.throw(f"Price not found for item {item_code}")
         
-@frappe.whitelist()
-# def calculate_shipping_amount(length, width, height):
-#     try:
-#         # تحويل النصوص إلى أعداد
-#         length = float(length)
-#         width = float(width)
-#         height = float(height)
-        
-#         # حساب الحجم
-#         volume = length * width * height
-        
-#         # قواعد التسعير بالحجم
-#         if volume < 10:
-#             return 100
-#         elif 10 <= volume < 20:
-#             return 200
-#         elif 20 <= volume < 30:
-#             return 300
-#         else:
-#             return 400
-#     except ValueError as e:
-#         return f"Error: {str(e)}"
-    
+ 
 	
 @frappe.whitelist()
 def calculate_shipping_amount_by_item_group( item_code=None, actual_weight=None, length=None ,width=None, height=None):
@@ -987,6 +965,7 @@ def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None,volumetric
           return fixed
     else:
         return "Error: Item code and actual weight are required for item group calculation."
+
 @frappe.whitelist()
 def get_cost_center(company):
     if not company:

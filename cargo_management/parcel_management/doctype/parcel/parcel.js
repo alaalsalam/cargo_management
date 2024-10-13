@@ -170,8 +170,6 @@ frappe.ui.form.on('Parcel', {
 		// frm.set_currency_labels(['rate', 'amount'], 'USD', 'content');
 	
 	},
-	
-
 	refresh(frm) {
 		if (frm.is_new()) {
 			return;
