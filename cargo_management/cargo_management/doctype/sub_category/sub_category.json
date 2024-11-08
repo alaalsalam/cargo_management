@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-10-15 01:20:38.205118",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sub_category_section",
+  "sub_name",
+  "number"
+ ],
+ "fields": [
+  {
+   "fieldname": "sub_category_section",
+   "fieldtype": "Section Break",
+   "label": "sub category"
+  },
+  {
+   "fieldname": "sub_name",
+   "fieldtype": "Data",
+   "label": "Sub Name"
+  },
+  {
+   "fieldname": "number",
+   "fieldtype": "Data",
+   "label": "Number"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-10-15 01:21:38.781943",
+ "modified_by": "Administrator",
+ "module": "Cargo Management",
+ "name": "Sub Category",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

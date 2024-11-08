@@ -13,6 +13,7 @@
   "fuel_item_group",
   "fuel_item",
   "default_commission_rate",
+  "default_parcel_price_rule",
   "column_break_rcaxa",
   "expense_account_group",
   "cash_or_bank_account_group",
@@ -164,12 +165,18 @@
    "fieldname": "enable_discount_accounting_for_parcel",
    "fieldtype": "Check",
    "label": "Enable Discount Accounting for Parcel"
+  },
+  {
+   "fieldname": "default_parcel_price_rule",
+   "fieldtype": "Link",
+   "label": "Default Parcel Price Rule",
+   "options": "Parcel Price Rule"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-09-26 01:56:30.324945",
+ "modified": "2024-10-18 02:32:17.749661",
  "modified_by": "Administrator",
  "module": "Cargo Management",
  "name": "Shipment Settings",

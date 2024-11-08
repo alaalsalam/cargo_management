@@ -43,10 +43,10 @@
   "currency",
   "cost_center",
   "content_section",
+  "parcel_price_rule",
   "content",
   "create_invoice",
   "section_break_dzqj",
-  "parcel_price_rule",
   "weight_type",
   "total_volumetric_weight",
   "total_actual_weight",
@@ -768,7 +768,7 @@
    "link_fieldname": "package"
   }
  ],
- "modified": "2024-09-29 23:18:24.805834",
+ "modified": "2024-10-18 03:03:50.389603",
  "modified_by": "Administrator",
  "module": "Parcel Management",
  "name": "Parcel",

@@ -11,12 +11,9 @@ class ParcelContent(Document):
 		from frappe.types import DF
 
 		actual_weight: DF.Float
-		amount: DF.Currency
 		color: DF.Link | None
 		description: DF.SmallText | None
 		height: DF.Int
-		import_rate: DF.Float
-		invoice: DF.Link | None
 		item_code: DF.Link | None
 		length: DF.Int
 		net_amount: DF.Currency
@@ -25,7 +22,7 @@ class ParcelContent(Document):
 		parentfield: DF.Data
 		parenttype: DF.Data
 		qty: DF.Int
-		rate: DF.Currency
+		sales_invoice: DF.Link | None
 		shipping_rule: DF.Link | None
 		tracking_number: DF.Data | None
 		volumetric_weight: DF.Float

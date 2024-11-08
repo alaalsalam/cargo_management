@@ -26,6 +26,7 @@ class ShipmentSettings(Document):
 		commission: DF.Literal["From Parcel", "From Warehouse"]
 		create_invoice: DF.Literal["Manually", "Automatically"]
 		default_commission_rate: DF.Float
+		default_parcel_price_rule: DF.Link | None
 		default_sales_item: DF.Link | None
 		enable_discount_accounting_for_parcel: DF.Check
 		expense_account_group: DF.TableMultiSelect[ShippingExpensesAccountGroup]

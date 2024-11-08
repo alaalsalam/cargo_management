@@ -852,24 +852,30 @@ def calculate_shipping_amount_by_item_group( item_code=None, actual_weight=None,
         if conditions:
             shipping_amount = conditions[0].shipping_amount
             frappe.log(f"Shipping Amount: {shipping_amount}")  
-            return shipping_amount
-    
+            return shipping_amount * actual_weight
+     
     frappe.log("No suitable shipping condition found. Returning 0.") 
     return 0
 
 @frappe.whitelist()
-def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None,volumetric_weight=None, actual_weight=None, length=None ,width=None, height=None):
+def calculate_shipping_amount_by_rule(shipping_rule=0, parcel_price_rule=None, item_code=None, volumetric_weight=None, actual_weight=None, length=None, width=None, height=None):
+    if not shipping_rule:
+        frappe.log("Error: Shipping Rule is required.")
+        
+    # باقي الكود كما هو
+
+    # قاعدة "Volumetric Weight"
     if shipping_rule == 'Volumetric Weight':
         if length is not None and width is not None and height is not None:
             try:
                 length = float(length)
                 width = float(width)
                 height = float(height)
+                
                 if volumetric_weight is None:
                     return "Error: Volumetric weight is required for calculation."
                 
-                volumetric_weight= float(volumetric_weight)
-                
+                volumetric_weight = float(volumetric_weight)
                 volume = (length * width * height)
 
                 price_rule = frappe.get_all('Parcel Price Rule',
@@ -890,46 +896,43 @@ def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None,volumetric
                     if conditions:
                         shipping_amount = conditions[0].shipping_amount
                         frappe.log(f"Shipping Amount from Volumetric Weight Rule: {shipping_amount}")
-                        return shipping_amount
-
-                # إذا لم توجد قواعد مناسبة، نرجع إلى الحساب الافتراضي بناءً على الحجم
-                
+                        return shipping_amount * volume
                 
             except ValueError as e:
                 return f"Error: {str(e)}"
         else:
             return "Error: Length, width, and height are required for volumetric weight calculation."
-    
-    elif  shipping_rule == 'Item Group':
-            item_group = frappe.db.get_value('Item', {'item_code': item_code}, 'item_group')
 
-            price_rule = frappe.get_all('Parcel Price Rule',
-                filters={'item_group': item_group},
-                fields=['name']
+    # قاعدة "Item Group"
+    elif shipping_rule == 'Item Group':
+        item_group = frappe.db.get_value('Item', {'item_code': item_code}, 'item_group')
+
+        price_rule = frappe.get_all('Parcel Price Rule',
+            filters={'item_group': item_group},
+            fields=['name']
+        )
+
+        if price_rule:
+            conditions = frappe.get_all('Parcel Rule Condition',
+                filters={
+                    'parent': price_rule[0].name,
+                    'item_group': item_group,
+                    'from_value': ['<=', actual_weight],
+                    'to_value': ['>=', actual_weight]
+                },
+                fields=['shipping_amount']
             )
 
-            if price_rule:
-                conditions = frappe.get_all('Parcel Rule Condition',
-                    filters={
-                        'parent': price_rule[0].name,
-						'item_group': item_group,
-                        'from_value': ['<=', actual_weight],
-                        'to_value': ['>=', actual_weight]
-                    },
-                    fields=['shipping_amount']
-                )
-
-                if conditions:
-                    shipping_amount = conditions[0].shipping_amount
-                    frappe.log(f"Shipping Amount: {shipping_amount}")
-                    return shipping_amount
-            
-            frappe.log("No suitable shipping condition found. Returning 0.")
-            return 0
+            if conditions:
+                shipping_amount = conditions[0].shipping_amount
+                frappe.log(f"Shipping Amount: {shipping_amount}")
+                return shipping_amount
         
+        frappe.log("No suitable shipping condition found. Returning 0.")
+        return 0
+
+    # قاعدة "Actual Weight"
     elif shipping_rule == 'Actual Weight':
-          
-   
         try:
             actual_weight = float(actual_weight)
             
@@ -951,20 +954,20 @@ def calculate_shipping_amount_by_rule(shipping_rule=0, item_code=None,volumetric
                 if conditions:
                     shipping_amount = conditions[0].shipping_amount
                     frappe.log(f"Shipping Amount from Actual Weight Rule: {shipping_amount}")
-                    return shipping_amount
+                    return shipping_amount * actual_weight
 
-           
         except ValueError as e:
             return f"Error: {str(e)}"
-   
-		
-	
 
-    elif  shipping_rule == 'Fixed':
-          fixed=frappe.get_value('Parcel Price Rule',shipping_rule,'shipping_amount')
-          return fixed
-    else:
-        return "Error: Item code and actual weight are required for item group calculation."
+    # قاعدة "Fixed"
+    elif shipping_rule == 'Fixed':
+        fixed = frappe.get_value('Parcel Price Rule', shipping_rule, 'shipping_amount')
+        return fixed
+
+    return "Error: Item code and actual weight are required for item group calculation."
+
+
+
 
 @frappe.whitelist()
 def get_cost_center(company):
